@@ -19,21 +19,22 @@ int main(void)
             USBHSH->INT_FG = USBHS_DETECT_FLAG; // Clear event (Maybe function)
             if(USBHSH->MIS_ST & USBHS_ATTCH)
             {
-                ret = USBHS_HostEnum();
+                printf("\r\nNew device connected.\n");
+                ret = USB_HostEnum();
                 if(ret == ERR_SUCCESS)
                 {
-                    printf("New device. Enum success\n");
+                    printf("Enum success\n");
                 }
                 else
                 {
-                    printf("enum error\n");
+                    printf("Enum error\n");
                 }
             }
             else
             {
                 USB_HostInit(DISABLE);
                 USB_HostInit(ENABLE);
-                printf("disconnect\n");
+                printf("Disconnect\n");
             }
         }
 	}
