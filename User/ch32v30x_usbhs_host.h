@@ -231,7 +231,7 @@ typedef struct __PACKED _USB_CONFIG_DESCR {
     uint8_t iConfiguration;
     uint8_t bmAttributes;
     uint8_t MaxPower;
-}USB_CFG_DESCR, *PUSB_CFG_DESCR;
+}USB_CFG_DESCR;
 
 typedef struct __PACKED _USB_INTERF_DESCR {
     uint8_t bLength;
@@ -291,7 +291,7 @@ typedef struct __PACKED _UDISK_BOC_CBW {/* command of BulkOnly USB-FlashDisk */
     uint8_t mCBW_LUN;
     uint8_t mCBW_CB_Len;                  /* length of command block */
     uint8_t mCBW_CB_Buf[16];              /* command block buffer */
-}UDISK_BOC_CBW, *PXUDISK_BOC_CBW;
+}UDISK_BOC_CBW;
 
 typedef struct __PACKED _UDISK_BOC_CSW {/* status of BulkOnly USB-FlashDisk */
     uint32_t mCBW_Sig;
@@ -514,10 +514,8 @@ typedef struct  __attribute__((packed))  _DEV_INFO
      uint8_t   DeviceSpeed;            //
      uint8_t   DeviceType;             // 0x30-HID  0x31-KEYBOARD  0x32-MOUSE
      uint8_t   DeviceEndp0Size;        // USB0
-     uint8_t   DeviceCongValue;
+     uint8_t   DeviceCfgValue;
  }USBDEV_INFO;
-
- #define pSetupReq ((USB_SETUP_REQ*)endpTXbuf)
 
  /*********************************************************/
  void USB_RCC_Init(void);
@@ -539,7 +537,7 @@ typedef struct  __attribute__((packed))  _DEV_INFO
  uint8_t HubSetPortFeature(uint8_t HubPortIndex, uint8_t FeatureSelt);
  uint8_t HubClearPortFeature(uint8_t HubPortIndex, uint8_t FeatureSelt);
 
- uint8_t HostCtrlTransfer(uint8_t* databuf, uint8_t* len);
+ uint8_t HostCtrlTransfer(USB_SETUP_REQ* request);
  uint8_t USBHostTransact(uint8_t endp_pid, uint8_t toggle, uint32_t timeout);
 #ifdef __cplusplus
 }
