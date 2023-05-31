@@ -9,27 +9,24 @@
 *******************************************************************************/ 
 #include "ch32v30x_usbhs_host.h"
 
-UINT8  FoundNewDev = 0;
-UINT8  Endp0MaxSize = 8;
-UINT8  UsbDevEndp0Size = 8;
-UINT16 EndpnMaxSize = 8;
+uint8_t  FoundNewDev = 0;
+uint8_t  Endp0MaxSize = 8;
+uint8_t  UsbDevEndp0Size = 8;
+uint16_t EndpnMaxSize = 8;
 USBDEV_INFO  thisUsbDev;
 
-PUINT8  pHOST_RX_RAM_Addr;
-PUINT8  pHOST_TX_RAM_Addr;
-
 /******************************** IN-OUT BUFFERS ********************************/
-__attribute__ ((aligned(4))) UINT8   endpTXbuf[MAX_PACKET_SIZE];  // OUT, must even address
-__attribute__ ((aligned(4))) UINT8   endpRXbuf[MAX_PACKET_SIZE];  // OUT, must even address
+__attribute__ ((aligned(4))) uint8_t   endpTXbuf[MAX_PACKET_SIZE];  // OUT, must even address
+__attribute__ ((aligned(4))) uint8_t   endpRXbuf[MAX_PACKET_SIZE];  // OUT, must even address
 
 /******************************** HOST DEVICE **********************************/
-__attribute__ ((aligned(4))) const UINT8  RequestDeviceDescriptor[]={USB_REQ_TYP_IN, USB_GET_DESCRIPTOR, 0x00, USB_DESCR_TYP_DEVICE, 0x00, 0x00, 0x12, 0x00};
-__attribute__ ((aligned(4))) const UINT8  RequestConfigDescriptor[]= {USB_REQ_TYP_IN, USB_GET_DESCRIPTOR, 0x00, USB_DESCR_TYP_CONFIG, 0x00, 0x00, 0x04, 0x00};
-__attribute__ ((aligned(4))) const UINT8  SetAddress[]={USB_REQ_TYP_OUT, USB_SET_ADDRESS, USB_DEVICE_ADDR, 0x00, 0x00, 0x00, 0x00, 0x00};
-__attribute__ ((aligned(4))) const UINT8  SetConfig[]={USB_REQ_TYP_OUT, USB_SET_CONFIGURATION, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-__attribute__ ((aligned(4))) const UINT8  Clear_EndpStall[]={USB_REQ_RECIP_INTERF, USB_SET_INTERFACE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-__attribute__ ((aligned(4))) const UINT8  SetupSetUsbInterface[] = { USB_REQ_RECIP_INTERF, USB_SET_INTERFACE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-__attribute__ ((aligned(4))) const UINT8  SetupClrEndpStall[] = { USB_REQ_TYP_OUT | USB_REQ_RECIP_ENDP, USB_CLEAR_FEATURE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+__attribute__ ((aligned(4))) const uint8_t  RequestDeviceDescriptor[]={USB_REQ_TYP_IN, USB_GET_DESCRIPTOR, 0x00, USB_DESCR_TYP_DEVICE, 0x00, 0x00, 0x12, 0x00};
+__attribute__ ((aligned(4))) const uint8_t  RequestConfigDescriptor[]= {USB_REQ_TYP_IN, USB_GET_DESCRIPTOR, 0x00, USB_DESCR_TYP_CONFIG, 0x00, 0x00, 0x04, 0x00};
+__attribute__ ((aligned(4))) const uint8_t  SetAddress[]={USB_REQ_TYP_OUT, USB_SET_ADDRESS, USB_DEVICE_ADDR, 0x00, 0x00, 0x00, 0x00, 0x00};
+__attribute__ ((aligned(4))) const uint8_t  SetConfig[]={USB_REQ_TYP_OUT, USB_SET_CONFIGURATION, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+__attribute__ ((aligned(4))) const uint8_t  Clear_EndpStall[]={USB_REQ_RECIP_INTERF, USB_SET_INTERFACE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+__attribute__ ((aligned(4))) const uint8_t  SetupSetUsbInterface[] = { USB_REQ_RECIP_INTERF, USB_SET_INTERFACE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+__attribute__ ((aligned(4))) const uint8_t  SetupClrEndpStall[] = { USB_REQ_TYP_OUT | USB_REQ_RECIP_ENDP, USB_CLEAR_FEATURE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 /*********************************************************************
  * @fn      USB20_RCC_Init
@@ -38,7 +35,7 @@ __attribute__ ((aligned(4))) const UINT8  SetupClrEndpStall[] = { USB_REQ_TYP_OU
  *
  * @return  none
  */
-void USB20_RCC_Init( void )
+void USB_RCC_Init( void )
 {
     RCC->CFGR2 = USBHS_PLL_SRC_HSE | USBHS_PLL_SRC_PRE_DIV2 | USBHS_PLL_CKREF_4M;//PLL REF = HSE/2 = 4MHz
     RCC->CFGR2 |= USBHS_CLK_SRC_PHY|USBHS_PLLALIVE;
@@ -57,18 +54,18 @@ void USB20_RCC_Init( void )
  *
  * @return  none
  */
-void USBHS_HostInit (FunctionalState sta)
+void USB_HostInit (FunctionalState sta)
 {
     if(sta==ENABLE)
     {
-        USB20_RCC_Init();
+        USB_RCC_Init();
 
         USBHSH->CONTROL = HOST_MODE | FULL_SPEED | INT_BUSY_EN | DMA_EN;
         USBHSH->HOST_CTRL = PHY_SUSPENDM | SEND_SOF_EN;
         USBHSH->HOST_EP_CONFIG = HOST_TX_EN | HOST_RX_EN ;
         USBHSH->HOST_RX_MAX_LEN = 512;
-        USBHSH->HOST_RX_DMA = (UINT32)endpRXbuf;
-        USBHSH->HOST_TX_DMA = (UINT32)endpTXbuf;
+        USBHSH->HOST_RX_DMA = (uint32_t)endpRXbuf;
+        USBHSH->HOST_TX_DMA = (uint32_t)endpTXbuf;
     }
     else
     {
@@ -179,7 +176,6 @@ uint8_t USBHostTransact(uint8_t endp_pid, uint8_t toggle, uint32_t timeout)
     return ERR_USB_TRANSFER;
 }
 
-
 /*********************************************************************
  * @fn      HostCtrlTransfer
  *
@@ -212,9 +208,7 @@ uint8_t HostCtrlTransfer(uint8_t* dataBuf_ptr, uint8_t* len_ptr)
        {
            while(requestLen)
            {
-//               if(thisUsbDev.DeviceSpeed != USB_HIGH_SPEED) Delay_Us(100);
-
-               USBHSH->HOST_RX_DMA = (UINT32)dataBuf_ptr + *len_ptr;
+               USBHSH->HOST_RX_DMA = (uint32_t)dataBuf_ptr + *len_ptr;
                retVal = USBHostTransact((USB_PID_IN<<4)| DEF_ENDP_0, tog<<3, 20000);
                if(retVal != ERR_SUCCESS) return retVal;
 
@@ -230,9 +224,7 @@ uint8_t HostCtrlTransfer(uint8_t* dataBuf_ptr, uint8_t* len_ptr)
        {                                                           // host to device
           while(requestLen)
           {
-//              if(thisUsbDev.DeviceSpeed != USB_HIGH_SPEED) Delay_Us(100);
-
-               USBHSH->HOST_TX_DMA = (UINT32)dataBuf_ptr + *len_ptr;
+               USBHSH->HOST_TX_DMA = (uint32_t)dataBuf_ptr + *len_ptr;
                USBHSH->HOST_TX_LEN = (requestLen >= UsbDevEndp0Size) ? UsbDevEndp0Size : requestLen;
 
                retVal = USBHostTransact((USB_PID_OUT<<4)|DEF_ENDP_0,  tog<<3,  20000);
@@ -243,8 +235,6 @@ uint8_t HostCtrlTransfer(uint8_t* dataBuf_ptr, uint8_t* len_ptr)
           }
         }
     }
-
-    if(thisUsbDev.DeviceSpeed != USB_HIGH_SPEED)Delay_Us(100);
 
     // status stage
     retVal = USBHostTransact(((USBHSH->HOST_TX_LEN) ? USB_PID_IN<<4|DEF_ENDP_0 : USB_PID_OUT<<4|DEF_ENDP_0),
@@ -277,7 +267,7 @@ uint8_t CtrlGetDevDescr(USB_DEV_DESCR* devDescriptor)
     if(retVal != ERR_SUCCESS) return retVal;
     if(len < pSetupReq->wLength) return ERR_USB_BUF_OVER;
 
-    UsbDevEndp0Size = ((PUSB_DEV_DESCR)endpRXbuf)->bMaxPacketSize0;
+    UsbDevEndp0Size = ((USB_DEV_DESCR*)endpRXbuf)->bMaxPacketSize0;
 
     memcpy(devDescriptor, (USB_DEV_DESCR*)endpRXbuf, sizeof(USB_DEV_DESCR));
 
@@ -322,15 +312,16 @@ uint8_t CtrlGetConfigDescr()
  *
  * @return  Error state
  */
-UINT8 CtrlSetAddress(uint8_t addr)
+uint8_t CtrlSetAddress(uint8_t addr)
 {
-    uint8_t ret;
+    uint8_t retVal;
 
     memcpy(pSetupReq, SetAddress, sizeof(USB_SETUP_REQ));
     pSetupReq->wValue = addr;
-    ret = HostCtrlTransfer( NULL, NULL );
-    if(ret != ERR_SUCCESS)  return  ( ret );
-    USBHS_CurrentAddr( addr );
+    retVal = HostCtrlTransfer(NULL, NULL);
+    if(retVal != ERR_SUCCESS) return retVal;
+
+    USB_CurrentAddress(addr);
     Delay_Ms(5);
     return  ERR_SUCCESS;
 }
@@ -344,11 +335,11 @@ UINT8 CtrlSetAddress(uint8_t addr)
  *
  * @return  Error state
  */
-UINT8 CtrlSetUsbConfig( UINT8 cfg_val)
+uint8_t CtrlSetUsbConfig(uint8_t cfg_val)
 {
     memcpy(pSetupReq, SetConfig, sizeof(USB_SETUP_REQ));
     pSetupReq->wValue = cfg_val;
-    return( HostCtrlTransfer( NULL, NULL ));
+    return HostCtrlTransfer(NULL, NULL);
 }
 
 /*********************************************************************
@@ -360,11 +351,11 @@ UINT8 CtrlSetUsbConfig( UINT8 cfg_val)
  *
  * @return  Error state
  */
-UINT8 CtrlClearEndpStall( UINT8 endp )
+uint8_t CtrlClearEndpStall(uint8_t endp)
 {
     memcpy(pSetupReq, SetupClrEndpStall, sizeof(USB_SETUP_REQ));
     pSetupReq -> wIndex = endp;
-    return( HostCtrlTransfer( NULL, NULL ) );
+    return HostCtrlTransfer(NULL, NULL);
 }
 
 /*********************************************************************
@@ -376,11 +367,11 @@ UINT8 CtrlClearEndpStall( UINT8 endp )
  *
  * @return  Error state
  */
-UINT8 CtrlSetUsbIntercace( UINT8 cfg )
+uint8_t CtrlSetUsbIntercace(uint8_t cfg)
 {
     memcpy(pSetupReq, SetupSetUsbInterface, sizeof(USB_SETUP_REQ));
     pSetupReq -> wValue = cfg;
-    return( HostCtrlTransfer( NULL, NULL ) );
+    return HostCtrlTransfer( NULL, NULL );
 }
 
 /*********************************************************************
@@ -392,27 +383,21 @@ UINT8 CtrlSetUsbIntercace( UINT8 cfg )
  *
  * @return  Error state
  */
-UINT8   HubGetPortStatus( UINT8 HubPortIndex )
+uint8_t   HubGetPortStatus(uint8_t HubPortIndex)
 {
-    UINT8   s;
-    UINT8  len;
+    uint8_t   retVal;
+    uint8_t  len;
 
     pSetupReq -> bRequestType = HUB_GET_PORT_STATUS;
     pSetupReq -> bRequest = HUB_GET_STATUS;
     pSetupReq -> wValue = 0x0000;
     pSetupReq -> wIndex = 0x0000|HubPortIndex;
     pSetupReq -> wLength = 0x0004;
-    s = HostCtrlTransfer( endpRXbuf, &len );         // 执行控制传输
-    if ( s != ERR_SUCCESS )
-    {
-        return( s );
-    }
-    if ( len < 4 )
-    {
-        return( ERR_USB_BUF_OVER );                  // 描述符长度错误
-    }
+    retVal = HostCtrlTransfer(endpRXbuf, &len);
+    if (retVal != ERR_SUCCESS) return retVal ;
+    if (len < 4) return ERR_USB_BUF_OVER;
 
-    return( ERR_SUCCESS );
+    return ERR_SUCCESS;
 }
 
 /*********************************************************************
@@ -425,14 +410,14 @@ UINT8   HubGetPortStatus( UINT8 HubPortIndex )
  *
  * @return  Error state
  */
-UINT8   HubSetPortFeature( UINT8 HubPortIndex, UINT8 FeatureSelt )
+uint8_t HubSetPortFeature(uint8_t HubPortIndex, uint8_t FeatureSelt)
 {
-    pSetupReq -> bRequestType = HUB_SET_PORT_FEATURE;
-    pSetupReq -> bRequest = HUB_SET_FEATURE;
-    pSetupReq -> wValue = 0x0000|FeatureSelt;
-    pSetupReq -> wIndex = 0x0000|HubPortIndex;
-    pSetupReq -> wLength = 0x0000;
-    return( HostCtrlTransfer( NULL, NULL ) );     // 执行控制传输
+    pSetupReq->bRequestType = HUB_SET_PORT_FEATURE;
+    pSetupReq->bRequest = HUB_SET_FEATURE;
+    pSetupReq->wValue = 0x0000|FeatureSelt;
+    pSetupReq->wIndex = 0x0000|HubPortIndex;
+    pSetupReq->wLength = 0x0000;
+    return(HostCtrlTransfer(NULL, NULL ));
 }
 
 /*********************************************************************
@@ -445,14 +430,14 @@ UINT8   HubSetPortFeature( UINT8 HubPortIndex, UINT8 FeatureSelt )
  *
  * @return  Error state
  */
-UINT8   HubClearPortFeature( UINT8 HubPortIndex, UINT8 FeatureSelt )
+uint8_t HubClearPortFeature(uint8_t HubPortIndex, uint8_t FeatureSelt)
 {
-    pSetupReq -> bRequestType = HUB_CLEAR_PORT_FEATURE;
-    pSetupReq -> bRequest = HUB_CLEAR_FEATURE;
-    pSetupReq -> wValue = 0x0000|FeatureSelt;
-    pSetupReq -> wIndex = 0x0000|HubPortIndex;
-    pSetupReq -> wLength = 0x0000;
-    return( HostCtrlTransfer( NULL, NULL ) );     // 执行控制传输
+    pSetupReq->bRequestType = HUB_CLEAR_PORT_FEATURE;
+    pSetupReq->bRequest = HUB_CLEAR_FEATURE;
+    pSetupReq->wValue = 0x0000|FeatureSelt;
+    pSetupReq->wIndex = 0x0000|HubPortIndex;
+    pSetupReq->wLength = 0x0000;
+    return(HostCtrlTransfer(NULL, NULL));
 }
 
 /*********************************************************************
@@ -464,7 +449,7 @@ UINT8   HubClearPortFeature( UINT8 HubPortIndex, UINT8 FeatureSelt )
  */
 uint8_t USBHS_HostEnum()
 {
-  uint8_t ret;
+  uint8_t retVal;
 
   USB_SetBusReset();
   Delay_Ms(10);
@@ -474,44 +459,37 @@ uint8_t USBHS_HostEnum()
   UsbDevEndp0Size = 8;
 
   // for PANGAEA CP16 need to set address first
-  ret = CtrlSetAddress(((PUSB_SETUP_REQ)SetAddress)->wValue);
-  if(ret != ERR_SUCCESS)
+  retVal = CtrlSetAddress(((USB_SETUP_REQ*)SetAddress)->wValue);
+  if(retVal != ERR_SUCCESS)
   {
-      printf("set address:%02x\n",ret);
-      return ret;
+      printf("set address:%02x\n",retVal);
+      return retVal;
   }
 
-  ret = CtrlGetDevDescr(&deviceDescriptor);
-  if(ret != ERR_SUCCESS)
+  retVal = CtrlGetDevDescr(&deviceDescriptor);
+  if(retVal != ERR_SUCCESS)
   {
-      printf("Get device descriptor error. Code:%02x\n", ret);
-      return ret;
+      printf("Get device descriptor error. Code:%02x\n", retVal);
+      return retVal;
   }
   else
   {
       printf("Device VID: %X PID: %X\r\n", deviceDescriptor.idVendor, deviceDescriptor.idProduct);
   }
 
-  ret = CtrlGetConfigDescr();
-  if(ret != ERR_SUCCESS)
+  retVal = CtrlGetConfigDescr();
+  if(retVal != ERR_SUCCESS)
   {
-      printf("get configuration descriptor:%02x\n",ret);
-      return ret;
-  }
-  ret = CtrlSetUsbConfig( thisUsbDev.DeviceCongValue );
-  if( ret != ERR_SUCCESS )
-  {
-      printf("set configuration:%02x\n",ret);
-      return ret;
+      printf("get configuration descriptor:%02x\n", retVal);
+      return retVal;
   }
 
-//  // Get full device descriptor
-//  ret = CtrlGetDevDescr(&deviceDescriptor);
-//  if(ret == ERR_SUCCESS)
-//  {
-//      printf("Device VID: %X PID: %X\r\n", deviceDescriptor.idVendor, deviceDescriptor.idProduct);
-//  }
-
+  retVal = CtrlSetUsbConfig(thisUsbDev.DeviceCongValue);
+  if(retVal != ERR_SUCCESS)
+  {
+      printf("set configuration:%02x\n", retVal);
+      return retVal;
+  }
   return ERR_SUCCESS;
 }
 
@@ -524,7 +502,7 @@ uint8_t USBHS_HostEnum()
  *
  * @return  none
  */
-void USBHS_CurrentAddr( UINT8 address )
+void USB_CurrentAddress(uint8_t address)
 {
     USBHSH->DEV_AD = address;                  // SET ADDRESS
     thisUsbDev.DeviceAddress = address ;
@@ -541,10 +519,10 @@ void USBHS_CurrentAddr( UINT8 address )
  *
  * @return  none
  */
-void AnalyseDescriptor(pUSBDEV_INFO pusbdev, PUINT8 pdesc, UINT16 l)
+void AnalyseDescriptor(USBDEV_INFO* pusbdev, uint8_t* pdesc, uint16_t len)
 {
-    UINT16 i;
-    for( i=0; i<l; i++ )                                                //分析描述符
+    uint16_t i;
+    for( i=0; i<len; i++ )                                                //分析描述符
     {
          if((pdesc[i]==0x09)&&(pdesc[i+1]==0x02))
          {
@@ -558,18 +536,18 @@ void AnalyseDescriptor(pUSBDEV_INFO pusbdev, PUINT8 pdesc, UINT16 l)
                  printf("endpIN:%02x \n",pdesc[i+2]&0x0f);              //取in端点号
                  pusbdev->DevEndp.InEndpNum = pdesc[i+2]&0x0f;
                  pusbdev->DevEndp.InEndpCount++;
-                 EndpnMaxSize = ((UINT16)pdesc[i+5]<<8)|pdesc[i+4];     //取端点大小
+                 EndpnMaxSize = ((uint16_t)pdesc[i+5]<<8)|pdesc[i+4];     //取端点大小
                  pusbdev->DevEndp.InEndpMaxSize = EndpnMaxSize;
-                 printf("In_endpmaxsize:%02x \n",EndpnMaxSize);
+                 printf("In_endpmaxsize:%02x \n", EndpnMaxSize);
             }
             else
             {
                 printf("endpOUT:%02x \n",pdesc[i+2]&0x0f);              //取out端点号
                 pusbdev->DevEndp.OutEndpNum = pdesc[i+2]&0x0f;
                 pusbdev->DevEndp.OutEndpCount++;
-                EndpnMaxSize =((UINT16)pdesc[i+5]<<8)|pdesc[i+4];        //取端点大小
+                EndpnMaxSize =((uint16_t)pdesc[i+5]<<8)|pdesc[i+4];        //取端点大小
                 pusbdev->DevEndp.OutEndpMaxSize = EndpnMaxSize;
-                printf("Out_endpmaxsize:%02x \n",EndpnMaxSize);
+                printf("Out_endpmaxsize:%02x \n", EndpnMaxSize);
             }
         }
   }

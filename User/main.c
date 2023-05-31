@@ -10,7 +10,7 @@ int main(void)
 	printf("BLE-USB Host converter\r\n");
 	printf("SystemClk:%d\r\n", SystemCoreClock);
 
-	USBHS_HostInit(ENABLE);
+	USB_HostInit(ENABLE);
 
 	while(1)
 	{
@@ -31,8 +31,8 @@ int main(void)
             }
             else
             {
-                USBHS_HostInit(DISABLE);
-                USBHS_HostInit(ENABLE);
+                USB_HostInit(DISABLE);
+                USB_HostInit(ENABLE);
                 printf("disconnect\n");
             }
         }

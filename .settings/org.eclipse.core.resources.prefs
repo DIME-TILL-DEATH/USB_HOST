@@ -3,6 +3,7 @@ encoding//Peripheral/inc/ch32v30x.h=GBK
 encoding//Peripheral/inc/ch32v30x_dvp.h=GBK
 encoding//Peripheral/inc/ch32v30x_fsmc.h=GBK
 encoding//Startup/startup_ch32v30x_D8C.S=GBK
+encoding//User/ch32_conf/ch32v30x_conf.h=GBK
 encoding//User/ch32v30x_usbhs_host.c=GBK
 encoding//User/ch32v30x_usbhs_host.h=GBK
 encoding//User/ch32vf30x_usbfs_host.c=GBK

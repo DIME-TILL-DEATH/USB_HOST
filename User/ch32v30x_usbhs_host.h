@@ -18,91 +18,6 @@
  extern "C" {
 #endif
 
-#ifndef NULL
-#define NULL                    0
-#endif
-
-#ifndef VOID
-#define VOID                    void
-#endif
-#ifndef CONST
-#define CONST                   const
-#endif
-#ifndef BOOL
-typedef unsigned char           BOOL;
-#endif
-#ifndef BOOLEAN
-typedef unsigned char           BOOLEAN;
-#endif
-#ifndef CHAR
-typedef char                    CHAR;
-#endif
-#ifndef INT8
-typedef char                    INT8;
-#endif
-#ifndef INT16
-typedef short                   INT16;
-#endif
-#ifndef INT32
-typedef long                    INT32;
-#endif
-#ifndef UINT8
-typedef unsigned char           UINT8;
-#endif
-#ifndef UINT16
-typedef unsigned short          UINT16;
-#endif
-#ifndef UINT32
-typedef unsigned long           UINT32;
-#endif
-#ifndef UINT8V
-typedef unsigned char volatile  UINT8V;
-#endif
-#ifndef UINT16V
-typedef unsigned short volatile UINT16V;
-#endif
-#ifndef UINT32V
-typedef unsigned long volatile  UINT32V;
-#endif
-
-#ifndef PVOID
-typedef void                    *PVOID;
-#endif
-#ifndef PCHAR
-typedef char                    *PCHAR;
-#endif
-#ifndef PCHAR
-typedef const char              *PCCHAR;
-#endif
-#ifndef PINT8
-typedef char                    *PINT8;
-#endif
-#ifndef PINT16
-typedef short                   *PINT16;
-#endif
-#ifndef PINT32
-typedef long                    *PINT32;
-#endif
-#ifndef PUINT8
-typedef unsigned char           *PUINT8;
-#endif
-#ifndef PUINT16
-typedef unsigned short          *PUINT16;
-#endif
-#ifndef PUINT32
-typedef unsigned long           *PUINT32;
-#endif
-#ifndef PUINT8V
-typedef volatile unsigned char  *PUINT8V;
-#endif
-#ifndef PUINT16V
-typedef volatile unsigned short *PUINT16V;
-#endif
-#ifndef PUINT32V
-typedef volatile unsigned long  *PUINT32V;
-#endif
-
-
 /* USB constant and structure define */
 
 /* USB PID */
@@ -253,16 +168,20 @@ typedef volatile unsigned long  *PUINT32V;
 #ifndef USB_DEVICE_ADDR
 #define USB_DEVICE_ADDR         0x02
 #endif
+
 #ifndef DEFAULT_ENDP0_SIZE
 #define DEFAULT_ENDP0_SIZE      8       /* default maximum packet size for endpoint 0 */
 #endif
+
 #ifndef MAX_PACKET_SIZE
 #define MAX_PACKET_SIZE         512      /* maximum packet size */
 #endif
+
 #ifndef USB_BO_CBW_SIZE
 #define USB_BO_CBW_SIZE         0x1F
 #define USB_BO_CSW_SIZE         0x0D
 #endif
+
 #ifndef USB_BO_CBW_SIG0
 #define USB_BO_CBW_SIG0         0x55
 #define USB_BO_CBW_SIG1         0x53
@@ -275,123 +194,113 @@ typedef volatile unsigned long  *PUINT32V;
 #endif
 
 #ifndef __PACKED
-#define __PACKED            __attribute__((packed))
+#define __PACKED  __attribute__((packed))
 #endif
 
 typedef struct __PACKED _USB_SETUP_REQ {
-    UINT8 bRequestType;
-    UINT8 bRequest;
-    UINT16 wValue;
-    UINT16 wIndex;
-    UINT16 wLength;
-} USB_SETUP_REQ, *PUSB_SETUP_REQ;
-
+    uint8_t bRequestType;
+    uint8_t bRequest;
+    uint16_t wValue;
+    uint16_t wIndex;
+    uint16_t wLength;
+}USB_SETUP_REQ;
 
 typedef struct __PACKED _USB_DEVICE_DESCR {
-    UINT8 bLength;
-    UINT8 bDescriptorType;
-    UINT16 bcdUSB;
-    UINT8 bDeviceClass;
-    UINT8 bDeviceSubClass;
-    UINT8 bDeviceProtocol;
-    UINT8 bMaxPacketSize0;
-    UINT16 idVendor;
-    UINT16 idProduct;
-    UINT16 bcdDevice;
-    UINT8 iManufacturer;
-    UINT8 iProduct;
-    UINT8 iSerialNumber;
-    UINT8 bNumConfigurations;
-} USB_DEV_DESCR, *PUSB_DEV_DESCR;
-
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint16_t bcdUSB;
+    uint8_t bDeviceClass;
+    uint8_t bDeviceSubClass;
+    uint8_t bDeviceProtocol;
+    uint8_t bMaxPacketSize0;
+    uint16_t idVendor;
+    uint16_t idProduct;
+    uint16_t bcdDevice;
+    uint8_t iManufacturer;
+    uint8_t iProduct;
+    uint8_t iSerialNumber;
+    uint8_t bNumConfigurations;
+}USB_DEV_DESCR;
 
 typedef struct __PACKED _USB_CONFIG_DESCR {
-    UINT8 bLength;
-    UINT8 bDescriptorType;
-    UINT16 wTotalLength;
-    UINT8 bNumInterfaces;
-    UINT8 bConfigurationValue;
-    UINT8 iConfiguration;
-    UINT8 bmAttributes;
-    UINT8 MaxPower;
-} USB_CFG_DESCR, *PUSB_CFG_DESCR;
-
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint16_t wTotalLength;
+    uint8_t bNumInterfaces;
+    uint8_t bConfigurationValue;
+    uint8_t iConfiguration;
+    uint8_t bmAttributes;
+    uint8_t MaxPower;
+}USB_CFG_DESCR, *PUSB_CFG_DESCR;
 
 typedef struct __PACKED _USB_INTERF_DESCR {
-    UINT8 bLength;
-    UINT8 bDescriptorType;
-    UINT8 bInterfaceNumber;
-    UINT8 bAlternateSetting;
-    UINT8 bNumEndpoints;
-    UINT8 bInterfaceClass;
-    UINT8 bInterfaceSubClass;
-    UINT8 bInterfaceProtocol;
-    UINT8 iInterface;
-} USB_ITF_DESCR, *PUSB_ITF_DESCR;
-
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint8_t bInterfaceNumber;
+    uint8_t bAlternateSetting;
+    uint8_t bNumEndpoints;
+    uint8_t bInterfaceClass;
+    uint8_t bInterfaceSubClass;
+    uint8_t bInterfaceProtocol;
+    uint8_t iInterface;
+}USB_ITF_DESCR;
 
 typedef struct __PACKED _USB_ENDPOINT_DESCR {
-    UINT8 bLength;
-    UINT8 bDescriptorType;
-    UINT8 bEndpointAddress;
-    UINT8 bmAttributes;
-    UINT16 wMaxPacketSize;
-    UINT8 bInterval;
-} USB_ENDP_DESCR, *PUSB_ENDP_DESCR;
-
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint8_t bEndpointAddress;
+    uint8_t bmAttributes;
+    uint16_t wMaxPacketSize;
+    uint8_t bInterval;
+}USB_ENDP_DESCR;
 
 typedef struct __PACKED _USB_CONFIG_DESCR_LONG {
     USB_CFG_DESCR   cfg_descr;
     USB_ITF_DESCR   itf_descr;
     USB_ENDP_DESCR  endp_descr[1];
-} USB_CFG_DESCR_LONG, *PUSB_CFG_DESCR_LONG;
-
+}USB_CFG_DESCR_LONG;
 
 typedef struct __PACKED _USB_HUB_DESCR {
-    UINT8 bDescLength;
-    UINT8 bDescriptorType;
-    UINT8 bNbrPorts;
-    UINT8 wHubCharacteristicsL;
-    UINT8 wHubCharacteristicsH;
-    UINT8 bPwrOn2PwrGood;
-    UINT8 bHubContrCurrent;
-    UINT8 DeviceRemovable;
-    UINT8 PortPwrCtrlMask;
-} USB_HUB_DESCR, *PUSB_HUB_DESCR;
-
+    uint8_t bDescLength;
+    uint8_t bDescriptorType;
+    uint8_t bNbrPorts;
+    uint8_t wHubCharacteristicsL;
+    uint8_t wHubCharacteristicsH;
+    uint8_t bPwrOn2PwrGood;
+    uint8_t bHubContrCurrent;
+    uint8_t DeviceRemovable;
+    uint8_t PortPwrCtrlMask;
+}USB_HUB_DESCR;
 
 typedef struct __PACKED _USB_HID_DESCR {
-    UINT8 bLength;
-    UINT8 bDescriptorType;
-    UINT16 bcdHID;
-    UINT8 bCountryCode;
-    UINT8 bNumDescriptors;
-    UINT8 bDescriptorTypeX;
-    UINT8 wDescriptorLengthL;
-    UINT8 wDescriptorLengthH;
-} USB_HID_DESCR, *PUSB_HID_DESCR;
-
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint16_t bcdHID;
+    uint8_t bCountryCode;
+    uint8_t bNumDescriptors;
+    uint8_t bDescriptorTypeX;
+    uint8_t wDescriptorLengthL;
+    uint8_t wDescriptorLengthH;
+}USB_HID_DESCR;
 
 typedef struct __PACKED _UDISK_BOC_CBW {/* command of BulkOnly USB-FlashDisk */
-    UINT32 mCBW_Sig;
-    UINT32 mCBW_Tag;
-    UINT32 mCBW_DataLen;                /* uppest byte of data length, always is 0 */
-    UINT8 mCBW_Flag;                    /* transfer direction and etc. */
-    UINT8 mCBW_LUN;
-    UINT8 mCBW_CB_Len;                  /* length of command block */
-    UINT8 mCBW_CB_Buf[16];              /* command block buffer */
-} UDISK_BOC_CBW, *PXUDISK_BOC_CBW;
-
+    uint32_t mCBW_Sig;
+    uint32_t mCBW_Tag;
+    uint32_t mCBW_DataLen;                /* uppest byte of data length, always is 0 */
+    uint8_t mCBW_Flag;                    /* transfer direction and etc. */
+    uint8_t mCBW_LUN;
+    uint8_t mCBW_CB_Len;                  /* length of command block */
+    uint8_t mCBW_CB_Buf[16];              /* command block buffer */
+}UDISK_BOC_CBW, *PXUDISK_BOC_CBW;
 
 typedef struct __PACKED _UDISK_BOC_CSW {/* status of BulkOnly USB-FlashDisk */
-    UINT32 mCBW_Sig;
-    UINT32 mCBW_Tag;
-    UINT32 mCSW_Residue;                /* return: remainder bytes */         /* uppest byte of remainder length, always is 0 */
-    UINT8 mCSW_Status;                  /* return: result status */
-} UDISK_BOC_CSW, *PXUDISK_BOC_CSW;
+    uint32_t mCBW_Sig;
+    uint32_t mCBW_Tag;
+    uint32_t mCSW_Residue;                /* return: remainder bytes */         /* uppest byte of remainder length, always is 0 */
+    uint8_t mCSW_Status;                  /* return: result status */
+}UDISK_BOC_CSW;
 
-
-/* USBHS PHY Clock Config (RCC_CFGR2) 使用USBHS PHY时钟的情况下，需要用到这些宏定义 */
+/* USBHS PHY Clock Config (RCC_CFGR2) USBHS PHY*/
 #ifndef  USBHS_EXIST
 #define USB_48M_CLK_SRC_MASK   (1<<31)
 #define USB_48M_CLK_SRC_SYS    (0<<31)
@@ -418,55 +327,52 @@ typedef struct __PACKED _UDISK_BOC_CSW {/* status of BulkOnly USB-FlashDisk */
 #define USBHS_PLL_SRC_PRE_DIV6 (5<<24)
 #define USBHS_PLL_SRC_PRE_DIV7 (6<<24)
 
+/*******************RCC_CFG2***********************/
+#define USBHS_CLK_SRC_PHY     (1<<31)
+#define USBHS_CLK_SRC_SYS     (0<<31)
+#define USBHS_PLLALIVE        (1<<30)
 
- /*******************RCC_CFG2***********************/
- #define USBHS_CLK_SRC_PHY     (1<<31)
- #define USBHS_CLK_SRC_SYS     (0<<31)
- #define USBHS_PLLALIVE        (1<<30)
+#define USBHS_PLL_CKREF_3M    (0<<28)
+#define USBHS_PLL_CKREF_4M    (1<<28)
+#define USBHS_PLL_CKREF_8M    (2<<28)
+#define USBHS_PLL_CKREF_5M    (3<<28)
 
- #define USBHS_PLL_CKREF_3M    (0<<28)
- #define USBHS_PLL_CKREF_4M    (1<<28)
- #define USBHS_PLL_CKREF_8M    (2<<28)
- #define USBHS_PLL_CKREF_5M    (3<<28)
+#define USBHS_PLL_SRC_HSE      (0<<27)
+#define USBHS_PLL_SRC_HSI      (1<<27)
 
- #define USBHS_PLL_SRC_HSE      (0<<27)
- #define USBHS_PLL_SRC_HSI      (1<<27)
-
- #define USBHS_PLL_SRC_PRE_DIV1 (0<<24)
- #define USBHS_PLL_SRC_PRE_DIV2 (1<<24)
- #define USBHS_PLL_SRC_PRE_DIV3 (2<<24)
- #define USBHS_PLL_SRC_PRE_DIV4 (3<<24)
- #define USBHS_PLL_SRC_PRE_DIV5 (4<<24)
- #define USBHS_PLL_SRC_PRE_DIV6 (5<<24)
- #define USBHS_PLL_SRC_PRE_DIV7 (6<<24)
- #define USBHS_PLL_SRC_PRE_DIV8 (7<<24)
- /*******************RCC_AHBEBR***********************/
- #define USBHS_CLK_EN        (1<<11)
-
+#define USBHS_PLL_SRC_PRE_DIV1 (0<<24)
+#define USBHS_PLL_SRC_PRE_DIV2 (1<<24)
+#define USBHS_PLL_SRC_PRE_DIV3 (2<<24)
+#define USBHS_PLL_SRC_PRE_DIV4 (3<<24)
+#define USBHS_PLL_SRC_PRE_DIV5 (4<<24)
+#define USBHS_PLL_SRC_PRE_DIV6 (5<<24)
+#define USBHS_PLL_SRC_PRE_DIV7 (6<<24)
+#define USBHS_PLL_SRC_PRE_DIV8 (7<<24)
+/*******************RCC_AHBEBR***********************/
+#define USBHS_CLK_EN        (1<<11)
 
 /******************************************************************************/
-/*                         USB HD Host Mode Peripheral Register map                              */
+/*                         USB HD Host Mode Peripheral Register map           */
 /******************************************************************************/
- /********************************************/
- // R8_USB_CTRL
- #define DMA_EN                  (1<<0)
- #define USB_ALL_CLR             (1<<1)
- #define USB_FORCE_RST           (1<<2)
- #define INT_BUSY_EN             (1<<3)
- #define DEV_PU_EN               (1<<4)
- #define FULL_SPEED              (0<<5)
- #define HIGH_SPEED              (1<<5)
- #define LOW_SPEED               (2<<5)
- #define HOST_MODE               (1<<7)
+// R8_USB_CTRL
+#define DMA_EN                  (1<<0)
+#define USB_ALL_CLR             (1<<1)
+#define USB_FORCE_RST           (1<<2)
+#define INT_BUSY_EN             (1<<3)
+#define DEV_PU_EN               (1<<4)
+#define FULL_SPEED              (0<<5)
+#define HIGH_SPEED              (1<<5)
+#define LOW_SPEED               (2<<5)
+#define HOST_MODE               (1<<7)
 
 //R8_UHOST_CTRL
- #define SEND_BUS_RESET          (1<<0)
- #define SEND_BUS_SUSPEND        (1<<1)
- #define SEND_BUS_RESUME         (1<<2)
- #define REMOTE_WAKE             (1<<3)
- #define PHY_SUSPENDM            (1<<4)
- #define UH_SOFT_FREE            (1<<6)
- #define SEND_SOF_EN             (1<<7)
+#define SEND_BUS_RESET          (1<<0)
+#define SEND_BUS_SUSPEND        (1<<1)
+#define SEND_BUS_RESUME         (1<<2)
+#define REMOTE_WAKE             (1<<3)
+#define PHY_SUSPENDM            (1<<4)
+#define UH_SOFT_FREE            (1<<6)
+#define SEND_SOF_EN             (1<<7)
 
 // R8_USB_INT_EN
 #define USBHS_DETECT_EN          (1<<0)
@@ -510,44 +416,44 @@ typedef struct __PACKED _UDISK_BOC_CSW {/* status of BulkOnly USB-FlashDisk */
 #define USBHS_HOST_RES           (0x0f)
 
 // R32_UH_EP_MOD
- #define HOST_TX_EN           (1<<3)
- #define HOST_RX_EN           (1<<18)
+#define HOST_TX_EN           (1<<3)
+#define HOST_RX_EN           (1<<18)
 
 // HOST_EP_TYPE
 #define USBHS_ENDP_TX_ISO     (1<<3)
 #define USBHS_ENDP_RX_ISO     (1<<(16+2))
 
 // R32_UH_EP_PID
- #define HOST_MASK_TOKEN      (0x0f)
- #define HOST_MASK_ENDP       (0x0f<<4)
+#define HOST_MASK_TOKEN      (0x0f)
+#define HOST_MASK_ENDP       (0x0f<<4)
 
 //R8_UH_RX_CTRL
- #define EP_R_RES_MASK        (3<<0)
- #define EP_R_RES_ACK         (0<<0)
- #define EP_R_RES_NYET        (1<<0)
- #define EP_R_RES_NAK         (2<<0)
- #define EP_R_RES_STALL       (3<<0)
+#define EP_R_RES_MASK        (3<<0)
+#define EP_R_RES_ACK         (0<<0)
+#define EP_R_RES_NYET        (1<<0)
+#define EP_R_RES_NAK         (2<<0)
+#define EP_R_RES_STALL       (3<<0)
 
- #define UH_R_RES_NO          (1<<2)
- #define UH_R_TOG_1           (1<<3)
- #define UH_R_TOG_2           (2<<3)
- #define UH_R_TOG_3           (3<<3)
- #define UH_R_TOG_AUTO        (1<<5)
- #define UH_R_DATA_NO         (1<<6)
+#define UH_R_RES_NO          (1<<2)
+#define UH_R_TOG_1           (1<<3)
+#define UH_R_TOG_2           (2<<3)
+#define UH_R_TOG_3           (3<<3)
+#define UH_R_TOG_AUTO        (1<<5)
+#define UH_R_DATA_NO         (1<<6)
+
 //R8_UH_TX_CTRL
- #define UH_T_RES_MASK        (3<<0)
- #define UH_T_RES_ACK         (0<<0)
- #define UH_T_RES_NYET        (1<<0)
- #define UH_T_RES_NAK         (2<<0)
- #define UH_T_RES_STALL       (3<<0)
+#define UH_T_RES_MASK        (3<<0)
+#define UH_T_RES_ACK         (0<<0)
+#define UH_T_RES_NYET        (1<<0)
+#define UH_T_RES_NAK         (2<<0)
+#define UH_T_RES_STALL       (3<<0)
 
- #define UH_T_RES_NO          (1<<2)
- #define UH_T_TOG_1           (1<<3)
- #define UH_T_TOG_2           (2<<3)
- #define UH_T_TOG_3           (3<<3)
- #define UH_T_TOG_AUTO        (1<<5)
- #define UH_T_DATA_NO         (1<<6)
-
+#define UH_T_RES_NO          (1<<2)
+#define UH_T_TOG_1           (1<<3)
+#define UH_T_TOG_2           (2<<3)
+#define UH_T_TOG_3           (3<<3)
+#define UH_T_TOG_AUTO        (1<<5)
+#define UH_T_DATA_NO         (1<<6)
 
 #define DEV_TYPE_KEYBOARD     (USB_DEV_CLASS_HID | 0x20)
 #define DEV_TYPE_MOUSE        (USB_DEV_CLASS_HID | 0x30)
@@ -590,58 +496,54 @@ typedef struct __PACKED _UDISK_BOC_CSW {/* status of BulkOnly USB-FlashDisk */
 
 typedef struct
 {
-    UINT16  OutEndpMaxSize;
-    UINT16  InEndpMaxSize;          // IN
-    UINT8   InEndpNum;              // IN
-    UINT8   Intog;                  // IN
-    UINT8   InEndpCount;            // IN
-    UINT8   OutEndpNum;             // OUT
-    UINT8   Outtog;                 // OUT
-    UINT8   OutEndpCount;           // OUT
+    uint16_t  OutEndpMaxSize;
+    uint16_t  InEndpMaxSize;          // IN
+    uint8_t   InEndpNum;              // IN
+    uint8_t   Intog;                  // IN
+    uint8_t   InEndpCount;            // IN
+    uint8_t   OutEndpNum;             // OUT
+    uint8_t   Outtog;                 // OUT
+    uint8_t   OutEndpCount;           // OUT
 }DEVENDP;
 
 typedef struct  __attribute__((packed))  _DEV_INFO
 {
      DEVENDP DevEndp;
-     UINT8   DeviceStatus;           //
-     UINT8   DeviceAddress;          //
-     UINT8   DeviceSpeed;            //
-     UINT8   DeviceType;             // 0x30-HID  0x31-KEYBOARD  0x32-MOUSE
-     UINT8   DeviceEndp0Size;        // USB0
-     UINT8   DeviceCongValue;
- }USBDEV_INFO,*pUSBDEV_INFO;
+     uint8_t   DeviceStatus;           //
+     uint8_t   DeviceAddress;          //
+     uint8_t   DeviceSpeed;            //
+     uint8_t   DeviceType;             // 0x30-HID  0x31-KEYBOARD  0x32-MOUSE
+     uint8_t   DeviceEndp0Size;        // USB0
+     uint8_t   DeviceCongValue;
+ }USBDEV_INFO;
 
-
- #define pSetupReq       ((PUSB_SETUP_REQ)endpTXbuf)
- #define USB_HIGH_SPEED   1
+ #define pSetupReq ((USB_SETUP_REQ*)endpTXbuf)
 
  /*********************************************************/
- void   USB20_RCC_Init( void );
- void   USBHS_HostInit (FunctionalState sta);
- void   USBHS_CurrentAddr(uint8_t address);
- void   AnalyseDescriptor(pUSBDEV_INFO pusbdev,PUINT8 pdesc, UINT16 l);
- void   USB_SetBusReset(void);
+ void USB_RCC_Init(void);
+ void USB_HostInit(FunctionalState sta);
+ void USB_CurrentAddress(uint8_t address);
+ void USB_SetBusReset(void);
 
- uint8_t  USBHS_HostEnum();
- uint8_t  CtrlGetDevDescr();
- uint8_t  CtrlGetConfigDescr();
+ uint8_t USBHS_HostEnum();
+ uint8_t CtrlGetDevDescr();
+ uint8_t CtrlGetConfigDescr();
+ uint8_t CtrlSetAddress(uint8_t addr);
+ uint8_t CtrlSetUsbConfig(uint8_t cfg_val);
+ uint8_t CtrlClearEndpStall(uint8_t endp);
+ uint8_t CtrlSetUsbIntercace(uint8_t cfg);
 
- uint8_t  CtrlSetAddress(uint8_t addr);
- uint8_t  CtrlSetUsbConfig(uint8_t cfg_val);
- uint8_t  CtrlClearEndpStall(uint8_t endp);
- uint8_t  CtrlSetUsbIntercace(uint8_t cfg);
+ void AnalyseDescriptor(USBDEV_INFO* pusbdev, uint8_t* pdesc, uint16_t len);
 
- uint8_t  HubGetPortStatus( uint8_t HubPortIndex );
- uint8_t  HubSetPortFeature( uint8_t HubPortIndex, uint8_t FeatureSelt );
- uint8_t  HubClearPortFeature( uint8_t HubPortIndex, uint8_t FeatureSelt );
- uint8_t  HostCtrlTransfer(uint8_t* databuf, uint8_t* len);
- uint8_t  USBHostTransact(uint8_t endp_pid, uint8_t toggle, uint32_t timeout);
+ uint8_t HubGetPortStatus(uint8_t HubPortIndex);
+ uint8_t HubSetPortFeature(uint8_t HubPortIndex, uint8_t FeatureSelt);
+ uint8_t HubClearPortFeature(uint8_t HubPortIndex, uint8_t FeatureSelt);
+
+ uint8_t HostCtrlTransfer(uint8_t* databuf, uint8_t* len);
+ uint8_t USBHostTransact(uint8_t endp_pid, uint8_t toggle, uint32_t timeout);
 #ifdef __cplusplus
 }
 #endif
 
-
 #endif  
-
-
 #endif
