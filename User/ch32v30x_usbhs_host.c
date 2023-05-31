@@ -10,9 +10,9 @@
 #include "ch32v30x_usbhs_host.h"
 
 UINT8  FoundNewDev = 0;
-UINT8  Endp0MaxSize = 0;
-UINT8  UsbDevEndp0Size = 0;
-UINT16 EndpnMaxSize = 0;
+UINT8  Endp0MaxSize = 8;
+UINT8  UsbDevEndp0Size = 8;
+UINT16 EndpnMaxSize = 8;
 USBDEV_INFO  thisUsbDev;
 
 PUINT8  pHOST_RX_RAM_Addr;
@@ -24,7 +24,7 @@ __attribute__ ((aligned(4))) UINT8   endpRXbuf[MAX_PACKET_SIZE];  // OUT, must e
 
 /******************************** HOST DEVICE **********************************/
 __attribute__ ((aligned(4))) const UINT8  RequestDeviceDescriptor[]={USB_REQ_TYP_IN, USB_GET_DESCRIPTOR, 0x00, USB_DESCR_TYP_DEVICE, 0x00, 0x00, 0x12, 0x00};
-__attribute__ ((aligned(4))) const UINT8  GetConfigDescrptor[]= {USB_REQ_TYP_IN, USB_GET_DESCRIPTOR, 0x00, USB_DESCR_TYP_CONFIG, 0x00, 0x00, 0x04, 0x00};
+__attribute__ ((aligned(4))) const UINT8  RequestConfigDescriptor[]= {USB_REQ_TYP_IN, USB_GET_DESCRIPTOR, 0x00, USB_DESCR_TYP_CONFIG, 0x00, 0x00, 0x04, 0x00};
 __attribute__ ((aligned(4))) const UINT8  SetAddress[]={USB_REQ_TYP_OUT, USB_SET_ADDRESS, USB_DEVICE_ADDR, 0x00, 0x00, 0x00, 0x00, 0x00};
 __attribute__ ((aligned(4))) const UINT8  SetConfig[]={USB_REQ_TYP_OUT, USB_SET_CONFIGURATION, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 __attribute__ ((aligned(4))) const UINT8  Clear_EndpStall[]={USB_REQ_RECIP_INTERF, USB_SET_INTERFACE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -212,7 +212,7 @@ uint8_t HostCtrlTransfer(uint8_t* dataBuf_ptr, uint8_t* len_ptr)
        {
            while(requestLen)
            {
-               if(thisUsbDev.DeviceSpeed != USB_HIGH_SPEED) Delay_Us(100);
+//               if(thisUsbDev.DeviceSpeed != USB_HIGH_SPEED) Delay_Us(100);
 
                USBHSH->HOST_RX_DMA = (UINT32)dataBuf_ptr + *len_ptr;
                retVal = USBHostTransact((USB_PID_IN<<4)| DEF_ENDP_0, tog<<3, 20000);
@@ -222,7 +222,7 @@ uint8_t HostCtrlTransfer(uint8_t* dataBuf_ptr, uint8_t* len_ptr)
                uint32_t rxlen = (USBHSH->RX_LEN < requestLen) ? USBHSH->RX_LEN : requestLen;
                requestLen -= rxlen;
                if(len_ptr) *len_ptr += rxlen;
-               if(( USBHSH->RX_LEN == 0 ) || (USBHSH->RX_LEN & (UsbDevEndp0Size - 1)))  break;
+               if((USBHSH->RX_LEN == 0) || (USBHSH->RX_LEN & (UsbDevEndp0Size - 1)))  break;
             }
             USBHSH->HOST_TX_LEN = 0 ;
          }
@@ -230,7 +230,7 @@ uint8_t HostCtrlTransfer(uint8_t* dataBuf_ptr, uint8_t* len_ptr)
        {                                                           // host to device
           while(requestLen)
           {
-              if(thisUsbDev.DeviceSpeed != USB_HIGH_SPEED) Delay_Us(100);
+//              if(thisUsbDev.DeviceSpeed != USB_HIGH_SPEED) Delay_Us(100);
 
                USBHSH->HOST_TX_DMA = (UINT32)dataBuf_ptr + *len_ptr;
                USBHSH->HOST_TX_LEN = (requestLen >= UsbDevEndp0Size) ? UsbDevEndp0Size : requestLen;
@@ -268,21 +268,16 @@ uint8_t HostCtrlTransfer(uint8_t* dataBuf_ptr, uint8_t* len_ptr)
  */
 uint8_t CtrlGetDevDescr(USB_DEV_DESCR* devDescriptor)
 {
-    uint8_t retVal, len;
-
-    UsbDevEndp0Size = 8;
+    uint8_t retVal;
+    uint8_t len;
 
     memcpy(pSetupReq, RequestDeviceDescriptor, sizeof(USB_SETUP_REQ));
-    pSetupReq->wLength = UsbDevEndp0Size;
 
     retVal = HostCtrlTransfer(endpRXbuf, &len);
     if(retVal != ERR_SUCCESS) return retVal;
-    if(len < UsbDevEndp0Size) return  ERR_USB_BUF_OVER;
+    if(len < pSetupReq->wLength) return ERR_USB_BUF_OVER;
 
-    // tricky. But sometimes recieve Pid/Vid 0x00
     UsbDevEndp0Size = ((PUSB_DEV_DESCR)endpRXbuf)->bMaxPacketSize0;
-    pSetupReq->wLength = sizeof(USB_DEV_DESCR);
-    retVal = HostCtrlTransfer(endpRXbuf, &len);
 
     memcpy(devDescriptor, (USB_DEV_DESCR*)endpRXbuf, sizeof(USB_DEV_DESCR));
 
@@ -296,28 +291,26 @@ uint8_t CtrlGetDevDescr(USB_DEV_DESCR* devDescriptor)
  *
  * @return  Error state
  */
-uint8_t CtrlGetConfigDescr( UINT8 *Databuf )
+uint8_t CtrlGetConfigDescr()
 {
-    UINT8  ret;
-    UINT8  len;
-    UINT16 reallen;
+    uint8_t retVal;
+    uint8_t len;
 
-    memcpy(pSetupReq, GetConfigDescrptor, sizeof(USB_SETUP_REQ));
-    ret = HostCtrlTransfer(Databuf, &len);
-    if(ret != ERR_SUCCESS)             return  ( ret );
-    if(len < ( pSetupReq->wLength ) )  return  ERR_USB_BUF_OVER;
+    memcpy(pSetupReq, RequestConfigDescriptor, sizeof(USB_SETUP_REQ));
+    retVal = HostCtrlTransfer(endpRXbuf, &len);
+    if(retVal != ERR_SUCCESS)  return retVal;
+    if(len < pSetupReq->wLength) return ERR_USB_BUF_OVER;
 
-    reallen = ((PUSB_CFG_DESCR)Databuf)-> wTotalLength;             //解析全部配置描述符的长度
+    memcpy(pSetupReq, RequestConfigDescriptor, sizeof(USB_SETUP_REQ));
+    pSetupReq->wLength = ((PUSB_CFG_DESCR)endpRXbuf)->wTotalLength;
+    retVal = HostCtrlTransfer(endpRXbuf, &len);
+    if(retVal != ERR_SUCCESS) return retVal;
 
-    memcpy(pSetupReq, GetConfigDescrptor, sizeof(USB_SETUP_REQ));
-    pSetupReq->wLength = reallen;
-    ret = HostCtrlTransfer( (UINT8 *)Databuf, &len );              //获取全部配置描述符
-    if( ret != ERR_SUCCESS )           return  ( ret );
+    thisUsbDev.DeviceCongValue = ((PUSB_CFG_DESCR)endpRXbuf)->bConfigurationValue;
 
-    thisUsbDev.DeviceCongValue = ( (PUSB_CFG_DESCR)Databuf )-> bConfigurationValue;
-    Analysis_Descr( &thisUsbDev, (UINT8 *)Databuf, pSetupReq->wLength );
+    AnalyseDescriptor(&thisUsbDev, endpRXbuf, pSetupReq->wLength);
 
-    return( ERR_SUCCESS );
+    return ERR_SUCCESS;
 }
 
 /*********************************************************************
@@ -329,9 +322,9 @@ uint8_t CtrlGetConfigDescr( UINT8 *Databuf )
  *
  * @return  Error state
  */
-UINT8 CtrlSetAddress(UINT8 addr)
+UINT8 CtrlSetAddress(uint8_t addr)
 {
-    UINT8 ret;
+    uint8_t ret;
 
     memcpy(pSetupReq, SetAddress, sizeof(USB_SETUP_REQ));
     pSetupReq->wValue = addr;
@@ -478,6 +471,16 @@ uint8_t USBHS_HostEnum()
 
   USB_DEV_DESCR deviceDescriptor;
 
+  UsbDevEndp0Size = 8;
+
+  // for PANGAEA CP16 need to set address first
+  ret = CtrlSetAddress(((PUSB_SETUP_REQ)SetAddress)->wValue);
+  if(ret != ERR_SUCCESS)
+  {
+      printf("set address:%02x\n",ret);
+      return ret;
+  }
+
   ret = CtrlGetDevDescr(&deviceDescriptor);
   if(ret != ERR_SUCCESS)
   {
@@ -489,25 +492,27 @@ uint8_t USBHS_HostEnum()
       printf("Device VID: %X PID: %X\r\n", deviceDescriptor.idVendor, deviceDescriptor.idProduct);
   }
 
-  ret = CtrlSetAddress( ((PUSB_SETUP_REQ)SetAddress)->wValue );
-  if(ret != ERR_SUCCESS)
-  {
-      printf("set address:%02x\n",ret);
-      return( ret );
-  }
-  ret = CtrlGetConfigDescr(endpRXbuf);
+  ret = CtrlGetConfigDescr();
   if(ret != ERR_SUCCESS)
   {
       printf("get configuration descriptor:%02x\n",ret);
-      return( ret );
+      return ret;
   }
   ret = CtrlSetUsbConfig( thisUsbDev.DeviceCongValue );
   if( ret != ERR_SUCCESS )
   {
       printf("set configuration:%02x\n",ret);
-      return( ret );
+      return ret;
   }
-  return( ERR_SUCCESS );
+
+//  // Get full device descriptor
+//  ret = CtrlGetDevDescr(&deviceDescriptor);
+//  if(ret == ERR_SUCCESS)
+//  {
+//      printf("Device VID: %X PID: %X\r\n", deviceDescriptor.idVendor, deviceDescriptor.idProduct);
+//  }
+
+  return ERR_SUCCESS;
 }
 
 /*********************************************************************
@@ -536,7 +541,7 @@ void USBHS_CurrentAddr( UINT8 address )
  *
  * @return  none
  */
-void Analysis_Descr(pUSBDEV_INFO pusbdev, PUINT8 pdesc, UINT16 l)
+void AnalyseDescriptor(pUSBDEV_INFO pusbdev, PUINT8 pdesc, UINT16 l)
 {
     UINT16 i;
     for( i=0; i<l; i++ )                                                //分析描述符
