@@ -1,4 +1,5 @@
 eclipse.preferences.version=1
+encoding//Debug/debug.c=GBK
 encoding//Peripheral/inc/ch32v30x.h=GBK
 encoding//Peripheral/inc/ch32v30x_dvp.h=GBK
 encoding//Peripheral/inc/ch32v30x_fsmc.h=GBK
@@ -9,3 +10,4 @@ encoding//User/main.c=GBK
 encoding//User/usb/ch32v30x_usbhs_host.c=GBK
 encoding//User/usb/ch32v30x_usbhs_host.h=GBK
 encoding//User/usb/usb_defines.h=GBK
+encoding//User/usb/usb_device_classes.h=GBK

@@ -521,7 +521,11 @@ uint8_t USB_HostEnum()
   }
   else
   {
-      printf("Device VID: %X PID: %X\r\n", deviceDescriptor.idVendor, deviceDescriptor.idProduct);
+      thisUsbDev.DeviceClass = deviceDescriptor.bDeviceClass;
+      thisUsbDev.DeviceSubClass = deviceDescriptor.bDeviceSubClass;
+      thisUsbDev.VID = deviceDescriptor.idVendor;
+      thisUsbDev.PID = deviceDescriptor.idProduct;
+      printf("Device VID: %X PID: %X\r\n", thisUsbDev.VID, thisUsbDev.PID);
   }
 
   if(deviceDescriptor.iManufacturer !=0 )
@@ -563,6 +567,7 @@ uint8_t USB_HostEnum()
       printf("set configuration:%02x\n", retVal);
       return retVal;
   }
+
   return ERR_SUCCESS;
 }
 

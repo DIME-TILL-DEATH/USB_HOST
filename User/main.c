@@ -1,7 +1,36 @@
 #include "debug.h"
 #include "ch32v30x_usbhs_host.h"
 
+#include "usb_device_classes.h"
+
 void USBHS_IRQHandler()  __attribute__((interrupt("WCH-Interrupt-fast")));
+
+//USBDEV_INFO actualDevice;
+
+typedef enum
+{
+    DISCONNECTED,
+    VCOM_PORT,
+    PACNGAEA_CP16,
+    FLASH_DRIVE,
+    OTHER
+}CONNECTED_TYPE;
+CONNECTED_TYPE connectedType;
+
+void checkConnectedDevice()
+{
+    if(thisUsbDev.DeviceClass == USB_CLASS_MSD) connectedType = FLASH_DRIVE;
+
+    if(thisUsbDev.DeviceClass == USB_CLASS_CDC)
+    {
+        connectedType = VCOM_PORT;
+        if(thisUsbDev.VID == 0x483 && thisUsbDev.PID == 0x5740)
+        {
+            connectedType = PACNGAEA_CP16;
+            printf("Pangaea device found!\r\n");
+        }
+    }
+}
 
 int main(void)
 {
@@ -16,38 +45,18 @@ int main(void)
 
 	while(1)
 	{
-//        if(USBHSH->INT_FG & USBHS_DETECT_FLAG)
-//        {
-//            USBHSH->INT_FG = USBHS_DETECT_FLAG; // Clear event (Maybe function)
-//            if(USBHSH->MIS_ST & USBHS_ATTCH)
-//            {
-//                printf("\r\nNew device connected.\n");
-//                ret = USB_HostEnum();
-//                if(ret == ERR_SUCCESS)
-//                {
-//                    printf("Enum success\n");
-//                }
-//                else
-//                {
-//                    printf("Enum error\n");
-//                }
-//            }
-//            else
-//            {
-//                USB_HostInit(DISABLE);
-//                USB_HostInit(ENABLE);
-//                printf("Disconnect\n");
-//            }
-//        }
+	    if(connectedType == VCOM_PORT)
+	    {
+
+	    }
+
+	    Delay_Ms(5);
 	}
 }
 
 void USBHS_IRQHandler()
 {
-//    printf("IRQ USB");
-//    USBHSH->INT_FG = USBHS_DETECT_FLAG; // Clear event (Maybe function)
-
-    USBHSH->INT_FG = USBHS_DETECT_FLAG; // Clear event (Maybe function)
+    USBHSH->INT_FG = USBHS_DETECT_FLAG;
     if(USBHSH->MIS_ST & USBHS_ATTCH)
     {
         printf("\r\nNew device connected.\n");
@@ -55,6 +64,7 @@ void USBHS_IRQHandler()
         if(retVal == ERR_SUCCESS)
         {
             printf("Enum success\n");
+            checkConnectedDevice();
         }
         else
         {
@@ -65,8 +75,7 @@ void USBHS_IRQHandler()
     {
         USB_HostInit(DISABLE);
         USB_HostInit(ENABLE);
+        connectedType = DISCONNECTED;
         printf("Disconnect\n");
     }
 }
-
-

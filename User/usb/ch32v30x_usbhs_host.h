@@ -224,8 +224,8 @@ typedef struct  __attribute__((packed))  _DEV_INFO
      uint8_t   DeviceSpeed;            //
      uint8_t   DeviceClass;             // 0x20-CDC 0x30-HID  0x31-KEYBOARD  0x32-MOUSE
      uint8_t   DeviceSubClass;
-     uint8_t   VID;
-     uint8_t   PID;
+     uint16_t   VID;
+     uint16_t   PID;
      uint8_t   DeviceEndp0Size;        // USB0
      uint8_t   DeviceCfgValue;
 
@@ -250,6 +250,8 @@ uint8_t USB_HubSetPortFeature(uint8_t HubPortIndex, uint8_t FeatureSelt);
 uint8_t USB_HubClearPortFeature(uint8_t HubPortIndex, uint8_t FeatureSelt);
 
 void USB_AnalyseCfgDescriptor(USBDEV_INFO* pusbdev, uint8_t* pdesc, uint16_t len);
+
+extern USBDEV_INFO thisUsbDev;
 
 #ifdef __cplusplus
 }
