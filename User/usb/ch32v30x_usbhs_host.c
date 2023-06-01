@@ -13,7 +13,7 @@ __attribute__ ((aligned(4))) uint8_t   endpRXbuf[MAX_PACKET_SIZE];  // OUT, must
  *
  * @return  none
  */
-void USB_RCC_Init( void )
+void USB_RCC_Init()
 {
     RCC->CFGR2 = USBHS_PLL_SRC_HSE | USBHS_PLL_SRC_PRE_DIV2 | USBHS_PLL_CKREF_4M;//PLL REF = HSE/2 = 4MHz
     RCC->CFGR2 |= USBHS_CLK_SRC_PHY|USBHS_PLLALIVE;
@@ -32,9 +32,9 @@ void USB_RCC_Init( void )
  *
  * @return  none
  */
-void USB_HostInit (FunctionalState sta)
+void USB_HostInit (FunctionalState state)
 {
-    if(sta==ENABLE)
+    if(state==ENABLE)
     {
         USB_RCC_Init();
 
@@ -58,7 +58,7 @@ void USB_HostInit (FunctionalState sta)
  *
  * @return  none
  */
-void  USB_SetBusReset(void)
+void  USB_SetBusReset()
 {
     USBHSH->HOST_CTRL |= SEND_BUS_RESET;                              //bus reset
     Delay_Ms(15);
@@ -78,14 +78,14 @@ void  USB_SetBusReset(void)
  *
  * @return  Error state
  */
-uint8_t USB_RawTransaction(uint8_t endp_pid, uint8_t toggle, uint32_t timeout)
+uint8_t USB_RawTransaction(uint8_t endpPid, uint8_t endpToggle, uint32_t timeout)
 {
-    USBHSH->HOST_TX_CTRL = USBHSH->HOST_RX_CTRL = toggle;
+    USBHSH->HOST_TX_CTRL = USBHSH->HOST_RX_CTRL = endpToggle;
 
     uint8_t transRetry = 0;
     do
     {
-        USBHSH->HOST_EP_PID = endp_pid;
+        USBHSH->HOST_EP_PID = endpPid;
         USBHSH->INT_FG = USBHS_ACT_FLAG;
 
         for (uint32_t i = WAIT_USB_TOUT_200US; i != 0 && ((USBHSH->INT_FG) & USBHS_ACT_FLAG) == 0; i--)
@@ -110,7 +110,7 @@ uint8_t USB_RawTransaction(uint8_t endp_pid, uint8_t toggle, uint32_t timeout)
         else if(USBHSH->INT_FG & USBHS_ACT_FLAG)
         {
             uint8_t responsePID = USBHSH->INT_ST & USBHS_HOST_RES;
-            if((endp_pid >> 4) == USB_PID_IN)
+            if((endpPid >> 4) == USB_PID_IN)
             {
                 if (USBHSH->INT_ST & USBHS_TOGGLE_OK) return ERR_SUCCESS;
             }
@@ -127,7 +127,7 @@ uint8_t USB_RawTransaction(uint8_t endp_pid, uint8_t toggle, uint32_t timeout)
                 if (timeout < 0xFFFF) timeout--;
                 --transRetry;
             }
-            else switch (endp_pid >> 4)
+            else switch (endpPid >> 4)
             {
                 case USB_PID_SETUP:
                     break;
@@ -163,14 +163,14 @@ uint8_t USB_RawTransaction(uint8_t endp_pid, uint8_t toggle, uint32_t timeout)
  *
  * @return  Error state
  */
-uint8_t HostCtrlTransfer(USB_SETUP_REQ* request)
+uint8_t USB_HostCtrlTransfer(USB_SETUP_REQ* request_ptr)
 {
     uint8_t   retVal;
     uint8_t   tog = 1;
 
     uint32_t len_ptr = 0;
 
-    memcpy(endpTXbuf, request, sizeof(USB_SETUP_REQ));
+    memcpy(endpTXbuf, request_ptr, sizeof(USB_SETUP_REQ));
     Delay_Us(100);
 
     // setup stage
@@ -179,10 +179,10 @@ uint8_t HostCtrlTransfer(USB_SETUP_REQ* request)
     if(retVal != ERR_SUCCESS) return retVal;
 
     // data stage
-    uint16_t requestLen = request->wLength;
+    uint16_t requestLen = request_ptr->wLength;
     if(requestLen && endpRXbuf)
     {
-       if((request->bRequestType) & USB_REQ_TYP_IN)            // device to host
+       if((request_ptr->bRequestType) & USB_REQ_TYP_IN)            // device to host
        {
            while(requestLen)
            {
@@ -220,7 +220,7 @@ uint8_t HostCtrlTransfer(USB_SETUP_REQ* request)
 
     if(retVal != ERR_SUCCESS) return retVal;
 
-    if(len_ptr < request->wLength) return ERR_USB_BUF_OVER;
+    if(len_ptr < request_ptr->wLength) return ERR_USB_BUF_OVER;
 
     if (USBHSH->HOST_TX_LEN == 0) return ERR_SUCCESS;    //status stage is out, send a zero-length packet.
 
@@ -236,7 +236,7 @@ uint8_t HostCtrlTransfer(USB_SETUP_REQ* request)
  *
  * @return  Error state
  */
-uint8_t USB_CtrlGetDevDescr(USB_DEV_DESCR* devDescriptor)
+uint8_t USB_CtrlGetDevDescr(USB_DEV_DESCR* devDescriptor_ptr)
 {
     USB_SETUP_REQ request;
 
@@ -246,12 +246,12 @@ uint8_t USB_CtrlGetDevDescr(USB_DEV_DESCR* devDescriptor)
     request.wIndex = 0;
     request.wLength = USB_DESCR_SIZE_DEVICE;
 
-    uint8_t retVal = HostCtrlTransfer(&request);
+    uint8_t retVal = USB_HostCtrlTransfer(&request);
     if(retVal != ERR_SUCCESS) return retVal;
 
     thisUsbDev.DeviceEndp0Size = ((USB_DEV_DESCR*)endpRXbuf)->bMaxPacketSize0;
 
-    memcpy(devDescriptor, (USB_DEV_DESCR*)endpRXbuf, sizeof(USB_DEV_DESCR));
+    memcpy(devDescriptor_ptr, (USB_DEV_DESCR*)endpRXbuf, sizeof(USB_DEV_DESCR));
 
     return retVal;
 }
@@ -275,11 +275,11 @@ uint8_t USB_CtrlGetConfigDescr()
     request.wIndex = 0;
     request.wLength = USB_DESCR_SIZE_CONFIG;
 
-    retVal = HostCtrlTransfer(&request);
+    retVal = USB_HostCtrlTransfer(&request);
     if(retVal != ERR_SUCCESS)  return retVal;
 
     request.wLength = ((USB_CFG_DESCR*)endpRXbuf)->wTotalLength;
-    retVal = HostCtrlTransfer(&request);
+    retVal = USB_HostCtrlTransfer(&request);
     if(retVal != ERR_SUCCESS) return retVal;
 
     thisUsbDev.DeviceCfgValue = ((USB_CFG_DESCR*)endpRXbuf)->bConfigurationValue;
@@ -308,7 +308,7 @@ uint8_t USB_CtrlSetAddress(uint8_t addr)
     request.bRequest = USB_SET_ADDRESS;
     request.wValue = addr;
 
-    retVal = HostCtrlTransfer(&request);
+    retVal = USB_HostCtrlTransfer(&request);
     if(retVal != ERR_SUCCESS) return retVal;
 
     // SET ADDRESS
@@ -328,15 +328,15 @@ uint8_t USB_CtrlSetAddress(uint8_t addr)
  *
  * @return  Error state
  */
-uint8_t USB_CtrlSetUsbConfig(uint8_t cfg_val)
+uint8_t USB_CtrlSetUsbConfig(uint8_t cfgVal)
 {
     USB_SETUP_REQ request ={0};
 
     request.bRequestType = USB_REQ_TYP_OUT;
     request.bRequest = USB_SET_CONFIGURATION;
-    request.wValue = cfg_val;
+    request.wValue = cfgVal;
 
-    return HostCtrlTransfer(&request);
+    return USB_HostCtrlTransfer(&request);
 }
 
 /*********************************************************************
@@ -356,7 +356,7 @@ uint8_t USB_CtrlClearEndpStall(uint8_t endp)
     request.bRequest = USB_CLEAR_FEATURE;
     request.wIndex = endp;
 
-    return HostCtrlTransfer(&request);
+    return USB_HostCtrlTransfer(&request);
 }
 
 /*********************************************************************
@@ -376,7 +376,7 @@ uint8_t USB_CtrlSetUsbIntercace(uint8_t cfg)
     request.bRequest = USB_SET_INTERFACE;
     request.wValue = cfg;
 
-    return HostCtrlTransfer(&request);
+    return USB_HostCtrlTransfer(&request);
 }
 
 /*********************************************************************
@@ -389,7 +389,7 @@ uint8_t USB_CtrlSetUsbIntercace(uint8_t cfg)
  *
  * @return  Error state
  */
-uint8_t USB_CtrlGetStringDescr(uint8_t* resBuf, uint16_t* resLen, uint16_t indexId, uint8_t languageIndex)
+uint8_t USB_CtrlGetStringDescr(uint8_t* resultBuf_ptr, uint16_t* resultrLen_ptr, uint16_t indexId, uint8_t languageIndex)
 {
     uint8_t retVal;
 
@@ -401,17 +401,17 @@ uint8_t USB_CtrlGetStringDescr(uint8_t* resBuf, uint16_t* resLen, uint16_t index
     request.wIndex = languageIndex;
     request.wLength = 2;
 
-    retVal = HostCtrlTransfer(&request);
+    retVal = USB_HostCtrlTransfer(&request);
     if(retVal != ERR_SUCCESS)  return retVal;
 
     request.wLength = ((USB_STRING_DESCR*)endpRXbuf)->bLength;
-    retVal = HostCtrlTransfer(&request);
+    retVal = USB_HostCtrlTransfer(&request);
     if(retVal != ERR_SUCCESS) return retVal;
 
     uint16_t length = ((USB_STRING_DESCR*)endpRXbuf)->bLength-2;
 
-    if(resBuf) memcpy(resBuf, ((USB_STRING_DESCR*)endpRXbuf)->string, length);
-    if(resLen) *resLen = length;
+    if(resultBuf_ptr) memcpy(resultBuf_ptr, ((USB_STRING_DESCR*)endpRXbuf)->string, length);
+    if(resultrLen_ptr) *resultrLen_ptr = length;
 
     return ERR_SUCCESS;
 }
@@ -425,17 +425,17 @@ uint8_t USB_CtrlGetStringDescr(uint8_t* resBuf, uint16_t* resLen, uint16_t index
  *
  * @return  Error state
  */
-uint8_t USB_HubGetPortStatus(uint8_t HubPortIndex)
+uint8_t USB_HubGetPortStatus(uint8_t fubPortIndex)
 {
     USB_SETUP_REQ request;
 
     request.bRequestType = HUB_GET_PORT_STATUS;
     request.bRequest = HUB_GET_STATUS;
     request.wValue = 0x0000;
-    request.wIndex = 0x0000|HubPortIndex;
+    request.wIndex = 0x0000|fubPortIndex;
     request.wLength = 0x0004;
 
-    uint8_t retVal = HostCtrlTransfer(&request);
+    uint8_t retVal = USB_HostCtrlTransfer(&request);
     if (retVal != ERR_SUCCESS) return retVal ;
 
     return ERR_SUCCESS;
@@ -451,17 +451,17 @@ uint8_t USB_HubGetPortStatus(uint8_t HubPortIndex)
  *
  * @return  Error state
  */
-uint8_t USB_HubSetPortFeature(uint8_t HubPortIndex, uint8_t FeatureSelt)
+uint8_t USB_HubSetPortFeature(uint8_t hubPortIndex, uint8_t featureSelt)
 {
     USB_SETUP_REQ request;
 
     request.bRequestType = HUB_SET_PORT_FEATURE;
     request.bRequest = HUB_SET_FEATURE;
-    request.wValue = 0x0000|FeatureSelt;
-    request.wIndex = 0x0000|HubPortIndex;
+    request.wValue = 0x0000|featureSelt;
+    request.wIndex = 0x0000|hubPortIndex;
     request.wLength = 0x0000;
 
-    return HostCtrlTransfer(&request);
+    return USB_HostCtrlTransfer(&request);
 }
 
 /*********************************************************************
@@ -474,17 +474,17 @@ uint8_t USB_HubSetPortFeature(uint8_t HubPortIndex, uint8_t FeatureSelt)
  *
  * @return  Error state
  */
-uint8_t USB_HubClearPortFeature(uint8_t HubPortIndex, uint8_t FeatureSelt)
+uint8_t USB_HubClearPortFeature(uint8_t hubPortIndex, uint8_t featureSel)
 {
     USB_SETUP_REQ request;
 
     request.bRequestType = HUB_CLEAR_PORT_FEATURE;
     request.bRequest = HUB_CLEAR_FEATURE;
-    request.wValue = 0x0000|FeatureSelt;
-    request.wIndex = 0x0000|HubPortIndex;
+    request.wValue = 0x0000|featureSel;
+    request.wIndex = 0x0000|hubPortIndex;
     request.wLength = 0x0000;
 
-    return HostCtrlTransfer(&request);
+    return USB_HostCtrlTransfer(&request);
 }
 
 /*********************************************************************
@@ -543,7 +543,7 @@ uint8_t USB_HostEnum()
 
   if(deviceDescriptor.iProduct !=0 )
   {
-      uint8_t buf[256];
+      uint8_t buf[256] = {0};
       uint16_t len;
       USB_CtrlGetStringDescr(buf, &len, deviceDescriptor.iProduct, 0);
 
@@ -582,19 +582,19 @@ uint8_t USB_HostEnum()
  *
  * @return  none
  */
-void USB_AnalyseCfgDescriptor(USBDEV_INFO* pusbdev, uint8_t* pdesc, uint16_t len)
+void USB_AnalyseCfgDescriptor(USBDEV_INFO* usbDevice_ptr, uint8_t* descriptorBuf_ptr, uint16_t len)
 {
     for(uint16_t i=0; i<len; i++)
     {
-         if((pdesc[i]==USB_DESCR_SIZE_CONFIG)&&(pdesc[i+1]==USB_DESCR_TYP_CONFIG))
+         if((descriptorBuf_ptr[i]==USB_DESCR_SIZE_CONFIG)&&(descriptorBuf_ptr[i+1]==USB_DESCR_TYP_CONFIG))
          {
-             USB_CFG_DESCR* currentCFG_ptr = (USB_CFG_DESCR*)&(pdesc[i]);
+             USB_CFG_DESCR* currentCFG_ptr = (USB_CFG_DESCR*)&(descriptorBuf_ptr[i]);
              printf("bNumInterfaces:%02x \n", currentCFG_ptr->bNumInterfaces);
          }
 
-         if((pdesc[i]==USB_DESCR_SIZE_ITF)&&(pdesc[i+1]==USB_DESCR_TYP_ITF))
+         if((descriptorBuf_ptr[i]==USB_DESCR_SIZE_ITF)&&(descriptorBuf_ptr[i+1]==USB_DESCR_TYP_ITF))
          {
-             USB_ITF_DESCR* currentITF_ptr = (USB_ITF_DESCR*)&(pdesc[i]);
+             USB_ITF_DESCR* currentITF_ptr = (USB_ITF_DESCR*)&(descriptorBuf_ptr[i]);
              printf("Interface class:%02x num endpoints:%02d\n",
                      currentITF_ptr->bInterfaceClass,
                      currentITF_ptr->bNumEndpoints);
@@ -613,34 +613,84 @@ void USB_AnalyseCfgDescriptor(USBDEV_INFO* pusbdev, uint8_t* pdesc, uint16_t len
              }
          }
 
-         if((pdesc[i]==USB_DESCR_SIZE_ENDP)&&(pdesc[i+1]==USB_DESCR_TYP_ENDP))
+         if((descriptorBuf_ptr[i]==USB_DESCR_SIZE_ENDP)&&(descriptorBuf_ptr[i+1]==USB_DESCR_TYP_ENDP))
          {
-            USB_ENDP_DESCR* currentEndp_ptr = (USB_ENDP_DESCR*)&(pdesc[i]);
+            USB_ENDP_DESCR* currentEndp_ptr = (USB_ENDP_DESCR*)&(descriptorBuf_ptr[i]);
 
             if(currentEndp_ptr->bEndpointAddress & USB_ENDP_DIR_MASK)
             {
-                 pusbdev->DevEndp.InEndpNum = currentEndp_ptr->bEndpointAddress & 0x0f;
-                 pusbdev->DevEndp.InEndpCount++;
-                 pusbdev->DevEndp.InEndpMaxSize = currentEndp_ptr->wMaxPacketSize;
-                 pusbdev->DevEndp.InType = currentEndp_ptr->bmAttributes & USB_ENDP_TYPE_MASK;
+                 usbDevice_ptr->DevEndp.InEndpNum = currentEndp_ptr->bEndpointAddress & 0x0f;
+                 usbDevice_ptr->DevEndp.InEndpCount++;
+                 usbDevice_ptr->DevEndp.InEndpMaxSize = currentEndp_ptr->wMaxPacketSize;
+                 usbDevice_ptr->DevEndp.InType = currentEndp_ptr->bmAttributes & USB_ENDP_TYPE_MASK;
 
                  printf("endpIN:%02d maxSize:%02d type:%02x\n",
-                         pusbdev->DevEndp.InEndpNum,
-                         pusbdev->DevEndp.InEndpMaxSize,
-                         pusbdev->DevEndp.InType);
+                         usbDevice_ptr->DevEndp.InEndpNum,
+                         usbDevice_ptr->DevEndp.InEndpMaxSize,
+                         usbDevice_ptr->DevEndp.InType);
             }
             else
             {
-                pusbdev->DevEndp.OutEndpNum = currentEndp_ptr->bEndpointAddress & 0x0f;
-                pusbdev->DevEndp.OutEndpCount++;
-                pusbdev->DevEndp.OutEndpMaxSize = currentEndp_ptr->wMaxPacketSize;
-                pusbdev->DevEndp.OutType = currentEndp_ptr->bmAttributes & USB_ENDP_TYPE_MASK;
+                usbDevice_ptr->DevEndp.OutEndpNum = currentEndp_ptr->bEndpointAddress & 0x0f;
+                usbDevice_ptr->DevEndp.OutEndpCount++;
+                usbDevice_ptr->DevEndp.OutEndpMaxSize = currentEndp_ptr->wMaxPacketSize;
+                usbDevice_ptr->DevEndp.OutType = currentEndp_ptr->bmAttributes & USB_ENDP_TYPE_MASK;
 
                 printf("endpOUT:%02d maxSize:%02d type:%02x\n",
-                        pusbdev->DevEndp.InEndpNum,
-                        pusbdev->DevEndp.InEndpMaxSize,
-                        pusbdev->DevEndp.InType);
+                        usbDevice_ptr->DevEndp.OutEndpNum,
+                        usbDevice_ptr->DevEndp.OutEndpMaxSize,
+                        usbDevice_ptr->DevEndp.OutType);
             }
         }
   }
+}
+/*********************************************************************
+ * @fn      USB_GetEndpData
+ *
+ * @brief   Get data from USB device input endpoint.
+ *
+ * @para    endp_num: Endpoint number
+ *          endp_tog_ptr: Endpoint toggle
+ *          buf_ptr: Data Buffer
+ *          len_ptr: Data length
+ *
+ * @return  The result of getting data.
+ */
+uint8_t USB_GetEndpData(uint8_t endpNum, uint8_t *endpToggle_ptr, uint8_t *buf_ptr, uint16_t *len_ptr)
+{
+    USBHSH->HOST_RX_DMA = (uint32_t)endpRXbuf;
+    uint8_t retVal = USB_RawTransaction((USB_PID_IN << 4) | endpNum, *endpToggle_ptr, 0 );
+    if(retVal == ERR_SUCCESS)
+    {
+        *endpToggle_ptr ^= UH_T_TOG_1 | UH_R_TOG_1;
+        *len_ptr = USBHSH->RX_LEN;
+        memcpy(buf_ptr, endpRXbuf, *len_ptr);
+    }
+    return retVal;
+}
+
+/*********************************************************************
+ * @fn      USBHSH_SendEndpData
+ *
+ * @brief   Send data to the USB device output endpoint.
+ *
+ * @para    endp_num: Endpoint number
+ *          pendp_tog: Endpoint toggle
+ *          pbuf: Data Buffer
+ *          plen: Data length
+ *
+ * @return  The result of sending data.
+ */
+uint8_t USB_SendEndpData(uint8_t endpNum, uint8_t *endpToggle_ptr, uint8_t *buf_ptr, uint16_t len)
+{
+    memcpy(endpTXbuf, buf_ptr, len);
+    USBHSH->HOST_TX_LEN = len;
+
+    uint8_t retVal = USB_RawTransaction(( USB_PID_OUT << 4 ) | endpNum, *endpToggle_ptr, 0);
+    if(retVal == ERR_SUCCESS)
+    {
+        *endpToggle_ptr ^= UH_T_TOG_1 | UH_R_TOG_1;
+    }
+
+    return retVal;
 }

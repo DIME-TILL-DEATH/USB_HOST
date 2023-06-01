@@ -15,7 +15,7 @@ typedef enum
     FLASH_DRIVE,
     OTHER
 }CONNECTED_TYPE;
-CONNECTED_TYPE connectedType;
+CONNECTED_TYPE connectedType = DISCONNECTED;
 
 void checkConnectedDevice()
 {
@@ -45,12 +45,27 @@ int main(void)
 
 	while(1)
 	{
-	    if(connectedType == VCOM_PORT)
+	    if(connectedType == PACNGAEA_CP16)
 	    {
+	        uint8_t retVal;
 
+            uint8_t buf[] = "amtdev\r\n";
+            retVal = USB_SendEndpData(1, &thisUsbDev.DevEndp.OutToggle, buf, strlen(buf));
+
+            printf("Transfer res: %X", retVal);
+
+            uint8_t readBuf[256]={0};
+            uint16_t readLen;
+            retVal = USB_GetEndpData(1, &thisUsbDev.DevEndp.InToggle, readBuf, &readLen);
+
+            printf(" recieve res: %X\r\n", retVal);
+
+            if(readLen > 0)
+            {
+                printf("%s", readBuf);
+            }
 	    }
-
-	    Delay_Ms(5);
+	    Delay_Ms(2000);
 	}
 }
 

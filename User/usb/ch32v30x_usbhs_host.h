@@ -210,9 +210,11 @@ typedef struct
     uint16_t  InEndpMaxSize;          // IN
     uint8_t   InEndpNum;              // IN
     uint8_t   InType;                  // IN
+    uint8_t   InToggle;
     uint8_t   InEndpCount;            // IN
     uint8_t   OutEndpNum;             // OUT
     uint8_t   OutType;                 // OUT
+    uint8_t   OutToggle;
     uint8_t   OutEndpCount;           // OUT
 }USBDEV_ENDP;
 
@@ -236,6 +238,9 @@ typedef struct  __attribute__((packed))  _DEV_INFO
  /*********************************************************/
 void USB_HostInit(FunctionalState sta);
 uint8_t USB_HostEnum();
+
+uint8_t USB_GetEndpData(uint8_t endpNum, uint8_t *endpToggle_ptr, uint8_t *buf_ptr, uint16_t *len_ptr);
+uint8_t USB_SendEndpData(uint8_t endpNum, uint8_t *endpToggle_ptr, uint8_t *buf_ptr, uint16_t len);
 
 uint8_t USB_CtrlGetDevDescr(USB_DEV_DESCR* devDescriptor);
 uint8_t USB_CtrlGetConfigDescr();

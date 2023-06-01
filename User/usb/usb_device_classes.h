@@ -10,12 +10,12 @@
 #define USB_CLASS_PRINTER   0x07 // Printer
 #define USB_CLASS_MSD       0x08 // Mass Storage (MSD)
 #define USB_CLASS_HUB       0x09 // Hub
-#define USB_CLASS_CDC-DATA  0x0A // CDC-Data
+#define USB_CLASS_CDC_DATA 0x0A // CDC-Data
 #define USB_CLASS_SCARD     0x0B // Smart Card
 #define USB_CLASS_CSEC      0x0D // Content Security
 #define USB_CLASS_VIDEO     0x0E // Video
 #define USB_CLASS_HEALTH    0x0F // Personal Healthcare
-#define USB_CLASS_AUD-VID   0x10 // Audio/Video Devices
+#define USB_CLASS_AUD_VID   0x10 // Audio/Video Devices
 #define USB_CLASS_BILLBOARD 0x11 // Billboard Device Class
 #define USB_CLASS_DIAGN     0xDC // Diagnostic Device
 #define USB_CLASS_WIRELESS  0x0E // Wireless Controller
