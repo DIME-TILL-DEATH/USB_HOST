@@ -218,45 +218,52 @@ typedef struct
     uint8_t   OutEndpCount;           // OUT
 }USBDEV_ENDP;
 
-typedef struct  __attribute__((packed))  _DEV_INFO
+typedef struct __attribute__((packed)) _ENDP_INFO
 {
-     USBDEV_ENDP DevEndp;
-     uint8_t   DeviceStatus;           //
-     uint8_t   DeviceAddress;          //
-     uint8_t   DeviceSpeed;            //
-     uint8_t   DeviceClass;             // 0x20-CDC 0x30-HID  0x31-KEYBOARD  0x32-MOUSE
-     uint8_t   DeviceSubClass;
-     uint16_t   VID;
-     uint16_t   PID;
-     uint8_t   DeviceEndp0Size;        // USB0
-     uint8_t   DeviceCfgValue;
+    uint16_t  endpMaxSize;
+    uint8_t   endpAddress;
+    uint8_t   direction;
+    uint8_t   type;
+    uint8_t   toggle;
+}USBENDP_INFO;
 
-   //  USB_DEV_DESCR  deviceDescriptor;
-   //  USB_CFG_DESCR  cfgDescriptor;
+typedef struct __attribute__((packed)) _ITF_INFO
+{
+    USBENDP_INFO*   endpInfo;
+    uint8_t         endpCount;
+
+    uint8_t     itfNumber;
+    uint8_t     itfClass;
+}USBITF_INFO;
+
+typedef struct  __attribute__((packed)) _DEV_INFO
+{
+    uint8_t   devClass;
+    uint8_t   devSubClass;
+    uint16_t  VID;
+    uint16_t  PID;
+
+    USBITF_INFO* itfInfo;
+    uint8_t     itfNum;
+
+    uint8_t   endp0Size;
+    uint8_t   devCfgValue;
+
+    uint8_t   devStatus;
+    uint8_t   devAddress;
 }USBDEV_INFO;
+
+void freeUsbDevStruct(USBDEV_INFO* devInfoStruct);
 
  /*********************************************************/
 void USB_HostInit(FunctionalState sta);
-uint8_t USB_HostEnum();
+void USB_SetBusReset();
 
+uint8_t USB_HostEnum(USBDEV_INFO* usbDevice);
+
+uint8_t USB_HostCtrlTransfer(USBDEV_INFO* usbDevice_ptr, USB_SETUP_REQ* request_ptr, uint8_t** replyBuf_ptr);
 uint8_t USB_GetEndpData(uint8_t endpNum, uint8_t *endpToggle_ptr, uint8_t *buf_ptr, uint16_t *len_ptr);
 uint8_t USB_SendEndpData(uint8_t endpNum, uint8_t *endpToggle_ptr, uint8_t *buf_ptr, uint16_t len);
-
-uint8_t USB_CtrlGetDevDescr(USB_DEV_DESCR* devDescriptor);
-uint8_t USB_CtrlGetConfigDescr();
-uint8_t USB_CtrlSetAddress(uint8_t addr);
-uint8_t USB_CtrlSetUsbConfig(uint8_t cfg_val);
-uint8_t USB_CtrlClearEndpStall(uint8_t endp);
-uint8_t USB_CtrlSetUsbIntercace(uint8_t cfg);
-uint8_t USB_CtrlGetStringDescr(uint8_t* resBuf, uint16_t* resLen, uint16_t indexId, uint8_t languageIndex);
-
-uint8_t USB_HubGetPortStatus(uint8_t HubPortIndex);
-uint8_t USB_HubSetPortFeature(uint8_t HubPortIndex, uint8_t FeatureSelt);
-uint8_t USB_HubClearPortFeature(uint8_t HubPortIndex, uint8_t FeatureSelt);
-
-void USB_AnalyseCfgDescriptor(USBDEV_INFO* pusbdev, uint8_t* pdesc, uint16_t len);
-
-extern USBDEV_INFO thisUsbDev;
 
 #ifdef __cplusplus
 }
