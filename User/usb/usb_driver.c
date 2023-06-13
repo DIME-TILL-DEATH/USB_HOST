@@ -41,27 +41,26 @@ uint8_t USB_CtrlGetDevDescr(USBDEV_INFO* usbDevice_ptr)
     uint8_t buf[256];
     uint16_t len = 0;
 
-    // TODO description into struct. Free memory after!
+    usbDevice_ptr->manufacturerString = NULL;
+    usbDevice_ptr->manufacturerStringLen = 0;
     if(iManufacturerDesc != 0)
     {
         USB_CtrlGetStringDescr(usbDevice_ptr, buf, &len, iManufacturerDesc, 0);
 
-        for(uint16_t i=0; i<len; ++i)
-        {
-          printf("%c", buf[i]);
-        }
-        printf("\r\n");
+        usbDevice_ptr->manufacturerString = (char*)malloc(len);
+        memcpy(usbDevice_ptr->manufacturerString, buf, len);
+        usbDevice_ptr->manufacturerStringLen = len;
     }
 
+    usbDevice_ptr->productString = NULL;
+    usbDevice_ptr->productStringLen = 0;
     if(iProductDesc != 0)
     {
         USB_CtrlGetStringDescr(usbDevice_ptr, buf, &len, iProductDesc, 0);
 
-        for(uint16_t i=0; i<len; ++i)
-        {
-          printf("%c", buf[i]);
-        }
-        printf("\r\n");
+        usbDevice_ptr->productString = (char*)malloc(len);
+        memcpy(usbDevice_ptr->productString, buf, len);
+        usbDevice_ptr->productStringLen = len;
     }
     return retVal;
 }
@@ -124,11 +123,7 @@ void USB_ParseFullCfgDescriptor(USBDEV_INFO* usbDevice_ptr, uint8_t* descriptorB
 
              usbDevice_ptr->itfNum = currentCFG_ptr->bNumInterfaces;
              usbDevice_ptr->itfInfo = (USBITF_INFO*)calloc(usbDevice_ptr->itfNum, sizeof(USBITF_INFO));
-
-             // print info
-             printf("bNumInterfaces:%02x \n", usbDevice_ptr->itfNum);
          }
-
 
          if((descriptorBuf_ptr[i]==USB_DESCR_SIZE_ITF)&&(descriptorBuf_ptr[i+1]==USB_DESCR_TYP_ITF))
          {
@@ -138,26 +133,6 @@ void USB_ParseFullCfgDescriptor(USBDEV_INFO* usbDevice_ptr, uint8_t* descriptorB
              usbDevice_ptr->itfInfo[curItfNum1].endpCount = currentITF_ptr->bNumEndpoints;
              usbDevice_ptr->itfInfo[curItfNum1].endpInfo = (USBENDP_INFO*)calloc(usbDevice_ptr->itfInfo[curItfNum1].endpCount, sizeof(USBENDP_INFO));
 
-
-             // print info---------------------------------------
-             printf("Interface class:%02x number:%d num endpoints:%02d\n",
-                     usbDevice_ptr->itfInfo[curItfNum1].itfClass,
-                     usbDevice_ptr->itfInfo[curItfNum1].itfNumber,
-                     usbDevice_ptr->itfInfo[curItfNum1].endpCount);
-
-             if(currentITF_ptr->iInterface != 0)
-             {
-                 uint8_t buf[256];
-                 uint16_t desc_len = 0;
-                 USB_CtrlGetStringDescr(usbDevice_ptr, buf, &desc_len, currentITF_ptr->iInterface, 0);
-
-                 for(uint16_t i=0; i<desc_len; ++i)
-                 {
-                   printf("%c", buf[i]);
-                 }
-                 printf("\r\n");
-             }
-             //---------------------------------------------------
              curItfNum1++;
          }
 
@@ -171,13 +146,6 @@ void USB_ParseFullCfgDescriptor(USBDEV_INFO* usbDevice_ptr, uint8_t* descriptorB
             usbDevice_ptr->itfInfo[curItfNum2].endpInfo[curEndpNum].type = currentEndp_ptr->bmAttributes & USB_ENDP_TYPE_MASK;
             usbDevice_ptr->itfInfo[curItfNum2].endpInfo[curEndpNum].toggle = 0;
 
-            // print info---------------------------------------------------------------
-             printf("Endp dir:%02x addr:%02d maxSize:%02d type:%02x\n",
-                     usbDevice_ptr->itfInfo[curItfNum2].endpInfo[curEndpNum].direction,
-                     usbDevice_ptr->itfInfo[curItfNum2].endpInfo[curEndpNum].endpAddress,
-                     usbDevice_ptr->itfInfo[curItfNum2].endpInfo[curEndpNum].endpMaxSize,
-                     usbDevice_ptr->itfInfo[curItfNum2].endpInfo[curEndpNum].type);
-            //--------------------------------------------------------------------------
             curEndpNum++;
             if(curEndpNum == usbDevice_ptr->itfInfo[curItfNum2].endpCount)
             {
@@ -292,27 +260,29 @@ uint8_t USB_CtrlGetStringDescr(USBDEV_INFO* usbDevice_ptr,
                                 uint8_t* resultBuf_ptr, uint16_t* resultrLen_ptr,
                                 uint16_t indexId, uint8_t languageIndex)
 {
-//    uint8_t retVal;
-//
-//    USB_SETUP_REQ request = {0};
-//
-//    request.bRequestType = USB_REQ_TYP_IN;
-//    request.bRequest = USB_GET_DESCRIPTOR;
-//    request.wValue = USB_DESCR_TYP_STRING<<8 | indexId;
-//    request.wIndex = languageIndex;
-//    request.wLength = 2;
-//
-//    retVal = USB_HostCtrlTransfer(usbDevice_ptr, &request);
-//    if(retVal != ERR_SUCCESS)  return retVal;
-//
-//    request.wLength = ((USB_STRING_DESCR*)endpRXbuf)->bLength;
-//    retVal = USB_HostCtrlTransfer(usbDevice_ptr, &request);
-//    if(retVal != ERR_SUCCESS) return retVal;
-//
-//    uint16_t length = ((USB_STRING_DESCR*)endpRXbuf)->bLength-2;
-//
-//    if(resultBuf_ptr) memcpy(resultBuf_ptr, ((USB_STRING_DESCR*)endpRXbuf)->string, length);
-//    if(resultrLen_ptr) *resultrLen_ptr = length;
+    uint8_t retVal;
+
+    USB_SETUP_REQ request = {0};
+
+    request.bRequestType = USB_REQ_TYP_IN;
+    request.bRequest = USB_GET_DESCRIPTOR;
+    request.wValue = USB_DESCR_TYP_STRING<<8 | indexId;
+    request.wIndex = languageIndex;
+    request.wLength = 2;
+
+    uint8_t* replyBuf_ptr;
+
+    retVal = USB_HostCtrlTransfer(usbDevice_ptr, &request, &replyBuf_ptr);
+    if(retVal != ERR_SUCCESS)  return retVal;
+
+    request.wLength = ((USB_STRING_DESCR*)replyBuf_ptr)->bLength;
+    retVal = USB_HostCtrlTransfer(usbDevice_ptr, &request, &replyBuf_ptr);
+    if(retVal != ERR_SUCCESS) return retVal;
+
+    uint16_t length = ((USB_STRING_DESCR*)replyBuf_ptr)->bLength-2;
+
+    if(resultBuf_ptr) memcpy(resultBuf_ptr, ((USB_STRING_DESCR*)replyBuf_ptr)->string, length);
+    if(resultrLen_ptr) *resultrLen_ptr = length;
 
     return ERR_SUCCESS;
 }
@@ -418,10 +388,6 @@ uint8_t USB_HostEnum(USBDEV_INFO* usbDevice_ptr)
       printf("Get device descriptor error. Code:%02x\n", retVal);
       return retVal;
   }
-  else
-  {
-      printf("Device VID: %X PID: %X\r\n", usbDevice_ptr->VID, usbDevice_ptr->PID);
-  }
 
   retVal = USB_CtrlGetConfigDescr(usbDevice_ptr);
   if(retVal != ERR_SUCCESS)
@@ -447,7 +413,38 @@ uint8_t USB_HostEnum(USBDEV_INFO* usbDevice_ptr)
  */
 void USB_PrintDevInfo(USBDEV_INFO* devInfoStruct)
 {
+    printf("Device VID: %X PID: %X\r\n", devInfoStruct->VID, devInfoStruct->PID);
 
+    for(uint16_t i=0; i<devInfoStruct->manufacturerStringLen; ++i)
+    {
+      printf("%c", devInfoStruct->manufacturerString[i]);
+    }
+    printf("\r\n");
+
+    for(uint16_t i=0; i<devInfoStruct->productStringLen; ++i)
+    {
+      printf("%c", devInfoStruct->productString[i]);
+    }
+    printf("\r\n");
+
+    printf("bNumInterfaces:%02x \n", devInfoStruct->itfNum);
+
+    for(uint8_t i=0; i<devInfoStruct->itfNum; i++)
+    {
+        printf("Interface class:%02x number:%d num endpoints:%02d\n",
+                devInfoStruct->itfInfo[i].itfClass,
+                devInfoStruct->itfInfo[i].itfNumber,
+                devInfoStruct->itfInfo[i].endpCount);
+
+        for(uint8_t eNum=0; eNum<devInfoStruct->itfInfo[i].endpCount; eNum++)
+        {
+            printf("Endp dir:%02x addr:%02d maxSize:%02d type:%02x\n",
+                    devInfoStruct->itfInfo[i].endpInfo[eNum].direction,
+                    devInfoStruct->itfInfo[i].endpInfo[eNum].endpAddress,
+                    devInfoStruct->itfInfo[i].endpInfo[eNum].endpMaxSize,
+                    devInfoStruct->itfInfo[i].endpInfo[eNum].type);
+        }
+    }
 }
 
 /*****************************************************************
@@ -460,6 +457,18 @@ void USB_FreeDevStruct(USBDEV_INFO* devInfoStruct)
 {
     if(devInfoStruct)
     {
+        if(devInfoStruct->manufacturerString)
+        {
+            free(devInfoStruct->manufacturerString);
+            devInfoStruct->manufacturerString = NULL;
+        }
+
+        if(devInfoStruct->productString)
+        {
+            free(devInfoStruct->productString);
+            devInfoStruct->productString = NULL;
+        }
+
         USBITF_INFO* itfInfo_ptr = devInfoStruct->itfInfo;
         if(itfInfo_ptr)
         {

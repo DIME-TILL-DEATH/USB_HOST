@@ -243,6 +243,11 @@ typedef struct  __attribute__((packed)) _DEV_INFO
     uint16_t  VID;
     uint16_t  PID;
 
+    char* manufacturerString;
+    uint8_t manufacturerStringLen;
+    char* productString;
+    uint8_t productStringLen;
+
     USBITF_INFO* itfInfo;
     uint8_t     itfNum;
 

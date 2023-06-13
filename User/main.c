@@ -9,9 +9,6 @@ void USBHS_IRQHandler()  __attribute__((interrupt("WCH-Interrupt-fast")));
 
 #define PANGAEA_CDC_INTERFACE_NUM 1
 
-// free memory in function if using pointer to devices
-USBDEV_INFO* lastConnectedDevice_ptr;
-
 typedef enum
 {
     DISCONNECTED,
@@ -21,6 +18,8 @@ typedef enum
     OTHER
 }CONNECTED_TYPE;
 CONNECTED_TYPE connectedType = DISCONNECTED;
+
+USBDEV_INFO* lastConnectedDevice_ptr;
 
 void checkConnectedDevice()
 {
@@ -85,11 +84,15 @@ void USBHS_IRQHandler()
     {
         printf("\r\nNew device connected.\n");
 
+        USB_FreeDevStruct(lastConnectedDevice_ptr); // clear old ptr
         lastConnectedDevice_ptr = (USBDEV_INFO*)malloc(sizeof(USBDEV_INFO));
         uint8_t retVal = USB_HostEnum(lastConnectedDevice_ptr);
+
         if(retVal == ERR_SUCCESS)
         {
             printf("Enum success\n");
+
+            USB_PrintDevInfo(lastConnectedDevice_ptr);
             checkConnectedDevice();
         }
         else
