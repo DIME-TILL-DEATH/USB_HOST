@@ -1,3 +1,5 @@
+#include <malloc.h>
+
 #include "debug.h"
 
 #include "usb_driver.h"
@@ -8,7 +10,7 @@ void USBHS_IRQHandler()  __attribute__((interrupt("WCH-Interrupt-fast")));
 #define PANGAEA_CDC_INTERFACE_NUM 1
 
 // free memory in function if using pointer to devices
-USBDEV_INFO lastConnectedDevice;
+USBDEV_INFO* lastConnectedDevice_ptr;
 
 typedef enum
 {
@@ -22,12 +24,12 @@ CONNECTED_TYPE connectedType = DISCONNECTED;
 
 void checkConnectedDevice()
 {
-    if(lastConnectedDevice.devClass == USB_CLASS_MSD) connectedType = FLASH_DRIVE;
+    if(lastConnectedDevice_ptr->devClass == USB_CLASS_MSD) connectedType = FLASH_DRIVE;
 
-    if(lastConnectedDevice.devClass == USB_CLASS_CDC)
+    if(lastConnectedDevice_ptr->devClass == USB_CLASS_CDC)
     {
         connectedType = VCOM_PORT;
-        if(lastConnectedDevice.VID == 0x483 && lastConnectedDevice.PID == 0x5740)
+        if(lastConnectedDevice_ptr->VID == 0x483 && lastConnectedDevice_ptr->PID == 0x5740)
         {
             connectedType = PACNGAEA_CP16;
             printf("Pangaea device found!\r\n");
@@ -53,16 +55,16 @@ int main(void)
 	        uint8_t retVal;
 
             uint8_t buf[] = "amtdev\r\n";
-            retVal = USB_SendEndpData(lastConnectedDevice.itfInfo[PANGAEA_CDC_INTERFACE_NUM].endpInfo[0].endpAddress,
-                                      &lastConnectedDevice.itfInfo[PANGAEA_CDC_INTERFACE_NUM].endpInfo[0].toggle,
+            retVal = USB_SendEndpData(lastConnectedDevice_ptr->itfInfo[PANGAEA_CDC_INTERFACE_NUM].endpInfo[0].endpAddress,
+                                      &lastConnectedDevice_ptr->itfInfo[PANGAEA_CDC_INTERFACE_NUM].endpInfo[0].toggle,
                                       buf, strlen(buf));
 
             printf("Transfer res: %X", retVal);
 
             uint8_t readBuf[256]={0};
             uint16_t readLen;
-            retVal = USB_GetEndpData(lastConnectedDevice.itfInfo[PANGAEA_CDC_INTERFACE_NUM].endpInfo[1].endpAddress,
-                                     &lastConnectedDevice.itfInfo[PANGAEA_CDC_INTERFACE_NUM].endpInfo[1].toggle,
+            retVal = USB_GetEndpData(lastConnectedDevice_ptr->itfInfo[PANGAEA_CDC_INTERFACE_NUM].endpInfo[1].endpAddress,
+                                     &lastConnectedDevice_ptr->itfInfo[PANGAEA_CDC_INTERFACE_NUM].endpInfo[1].toggle,
                                      readBuf, &readLen);
 
             printf(" recieve res: %X\r\n", retVal);
@@ -82,7 +84,9 @@ void USBHS_IRQHandler()
     if(USBHSH->MIS_ST & USBHS_ATTCH)
     {
         printf("\r\nNew device connected.\n");
-        uint8_t retVal = USB_HostEnum(&lastConnectedDevice);
+
+        lastConnectedDevice_ptr = (USBDEV_INFO*)malloc(sizeof(USBDEV_INFO));
+        uint8_t retVal = USB_HostEnum(lastConnectedDevice_ptr);
         if(retVal == ERR_SUCCESS)
         {
             printf("Enum success\n");
@@ -99,7 +103,7 @@ void USBHS_IRQHandler()
         USB_HostInit(ENABLE);
 
         connectedType = DISCONNECTED;
-        USB_FreeDevStruct(&lastConnectedDevice);
+        USB_FreeDevStruct(lastConnectedDevice_ptr);
 
         printf("Disconnect\n");
     }

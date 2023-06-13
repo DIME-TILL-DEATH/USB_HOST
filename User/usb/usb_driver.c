@@ -148,10 +148,10 @@ void USB_ParseFullCfgDescriptor(USBDEV_INFO* usbDevice_ptr, uint8_t* descriptorB
              if(currentITF_ptr->iInterface != 0)
              {
                  uint8_t buf[256];
-                 uint16_t len;
-                 USB_CtrlGetStringDescr(usbDevice_ptr, buf, &len, currentITF_ptr->iInterface, 0);
+                 uint16_t desc_len = 0;
+                 USB_CtrlGetStringDescr(usbDevice_ptr, buf, &desc_len, currentITF_ptr->iInterface, 0);
 
-                 for(uint16_t i=0; i<len; ++i)
+                 for(uint16_t i=0; i<desc_len; ++i)
                  {
                    printf("%c", buf[i]);
                  }
@@ -439,6 +439,7 @@ uint8_t USB_HostEnum(USBDEV_INFO* usbDevice_ptr)
 
   return ERR_SUCCESS;
 }
+
 /*****************************************************************
  * @fn USB_PrintDevInfo
  *
@@ -448,11 +449,13 @@ void USB_PrintDevInfo(USBDEV_INFO* devInfoStruct)
 {
 
 }
+
 /*****************************************************************
- * @fn USB_FreeDevStruct
- *
- * @brief free all memory used for USBDEV_INFO struct
- */
+* @fn USB_FreeDevStruct
+*
+* @brief free all memory used for USBDEV_INFO struct
+*/
+
 void USB_FreeDevStruct(USBDEV_INFO* devInfoStruct)
 {
     if(devInfoStruct)
@@ -470,7 +473,7 @@ void USB_FreeDevStruct(USBDEV_INFO* devInfoStruct)
             free(itfInfo_ptr);
             itfInfo_ptr = NULL;
         }
-      //  free(devInfoStruct);
-       // devInfoStruct = NULL;
+        free(devInfoStruct);
+        devInfoStruct = NULL;
     }
 }
