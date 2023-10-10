@@ -3,12 +3,14 @@
 
 #include <string.h>
 
-#include "debug.h"
-#include "usb_defines.h"
+
 
 #ifdef __cplusplus
  extern "C" {
 #endif
+
+#include "debug.h"
+#include "usb_defines.h"
 
 /* USBHS PHY Clock Config (RCC_CFGR2) USBHS PHY*/
 #ifndef  USBHS_EXIST
@@ -204,60 +206,6 @@
 #define ERR_AOA_PROTOCOL      (0x41)
 #endif
 
-typedef struct
-{
-    uint16_t  OutEndpMaxSize;
-    uint16_t  InEndpMaxSize;          // IN
-    uint8_t   InEndpNum;              // IN
-    uint8_t   InType;                  // IN
-    uint8_t   InToggle;
-    uint8_t   InEndpCount;            // IN
-    uint8_t   OutEndpNum;             // OUT
-    uint8_t   OutType;                 // OUT
-    uint8_t   OutToggle;
-    uint8_t   OutEndpCount;           // OUT
-}USBDEV_ENDP;
-
-typedef struct __attribute__((packed)) _ENDP_INFO
-{
-    uint16_t  endpMaxSize;
-    uint8_t   endpAddress;
-    uint8_t   direction;
-    uint8_t   type;
-    uint8_t   toggle;
-}USBENDP_INFO;
-
-typedef struct __attribute__((packed)) _ITF_INFO
-{
-    USBENDP_INFO*   endpInfo;
-    uint8_t         endpCount;
-
-    uint8_t     itfNumber;
-    uint8_t     itfClass;
-}USBITF_INFO;
-
-typedef struct  __attribute__((packed)) _DEV_INFO
-{
-    uint8_t   devClass;
-    uint8_t   devSubClass;
-    uint16_t  VID;
-    uint16_t  PID;
-
-    char* manufacturerString;
-    uint8_t manufacturerStringLen;
-    char* productString;
-    uint8_t productStringLen;
-
-    USBITF_INFO* itfInfo;
-    uint8_t     itfNum;
-
-    uint8_t   endp0Size;
-    uint8_t   devCfgValue;
-
-    uint8_t   devStatus;
-    uint8_t   devAddress;
-}USBDEV_INFO;
-
 void freeUsbDevStruct(USBDEV_INFO* devInfoStruct);
 
  /*********************************************************/
@@ -267,8 +215,8 @@ void USB_SetBusReset();
 uint8_t USB_HostEnum(USBDEV_INFO* usbDevice);
 
 uint8_t USB_HostCtrlTransfer(USBDEV_INFO* usbDevice_ptr, USB_SETUP_REQ* request_ptr, uint8_t** replyBuf_ptr);
-uint8_t USB_GetEndpData(uint8_t endpNum, uint8_t *endpToggle_ptr, uint8_t *buf_ptr, uint16_t *len_ptr);
-uint8_t USB_SendEndpData(uint8_t endpNum, uint8_t *endpToggle_ptr, uint8_t *buf_ptr, uint16_t len);
+uint8_t USB_GetEndpData(USBENDP_INFO* endpInfo_ptr, uint8_t* buf_ptr, uint16_t *len_ptr);
+uint8_t USB_SendEndpData(USBENDP_INFO* endpInfo_ptr, uint8_t* buf_ptr, int16_t len);
 
 #ifdef __cplusplus
 }

@@ -5,6 +5,8 @@
 #include "usb_driver.h"
 #include "usb_device_classes.h"
 
+#include "uart.h"
+
 void USBHS_IRQHandler()  __attribute__((interrupt("WCH-Interrupt-fast")));
 
 #define PANGAEA_CDC_INTERFACE_NUM 1
@@ -47,33 +49,56 @@ int main(void)
 	USBHSH->INT_EN |= USBHS_DETECT_EN;
 	NVIC_EnableIRQ(USBHS_IRQn);
 
+	UART_Init();
+
 	while(1)
 	{
+//        uint32_t recievedBytes = UART_BUFFER_SIZE - DMA1_Channel6->CNTR;
+//	    uint16_t recievedBytes = rxBufferPos;
+
 	    if(connectedType == PACNGAEA_CP16)
 	    {
-	        uint8_t retVal;
+	        uint8_t retVal=0;
 
-            uint8_t buf[] = "amtdev\r\n";
-            retVal = USB_SendEndpData(lastConnectedDevice_ptr->itfInfo[PANGAEA_CDC_INTERFACE_NUM].endpInfo[0].endpAddress,
-                                      &lastConnectedDevice_ptr->itfInfo[PANGAEA_CDC_INTERFACE_NUM].endpInfo[0].toggle,
-                                      buf, strlen(buf));
-
-            printf("Transfer res: %X", retVal);
-
-            uint8_t readBuf[256]={0};
-            uint16_t readLen;
-            retVal = USB_GetEndpData(lastConnectedDevice_ptr->itfInfo[PANGAEA_CDC_INTERFACE_NUM].endpInfo[1].endpAddress,
-                                     &lastConnectedDevice_ptr->itfInfo[PANGAEA_CDC_INTERFACE_NUM].endpInfo[1].toggle,
-                                     readBuf, &readLen);
-
-            printf(" recieve res: %X\r\n", retVal);
-
-            if(readLen > 0)
+            if(rxBufferPos > 0)
             {
-                printf("%s", readBuf);
+                uint8_t bleTxBuf[UART_BUFFER_SIZE] = {0};
+
+                NVIC_DisableIRQ(USART2_IRQn);
+                uint16_t recievedBytes = rxBufferPos;
+                memcpy(bleTxBuf, rxBuffer, recievedBytes);
+                rxBufferPos = 0;
+                NVIC_EnableIRQ(USART2_IRQn);
+
+                if(lastConnectedDevice_ptr)retVal = USB_SendEndpData(&(lastConnectedDevice_ptr->itfInfo[PANGAEA_CDC_INTERFACE_NUM].endpInfo[0]),
+                                                      bleTxBuf, recievedBytes);
+
+                printf("BLE text: %s \n", bleTxBuf);
             }
+            Delay_Ms(25);
+
+            uint8_t bleRxBuf[MAX_PACKET_SIZE] = {0};
+            uint16_t readLen = 0;
+            uint16_t iter = 0;
+            do
+            {
+                if(lastConnectedDevice_ptr) retVal = USB_GetEndpData(&(lastConnectedDevice_ptr->itfInfo[PANGAEA_CDC_INTERFACE_NUM].endpInfo[1]),
+                                         bleRxBuf, &readLen);
+                if(retVal == ERR_SUCCESS)
+                {
+                    UART_WriteData(bleRxBuf, readLen);
+//                    printf("USB answer: %s\r\n", bleRxBuf);
+                }
+                iter++;
+                Delay_Ms(1);
+            }
+            while(retVal == ERR_SUCCESS);
 	    }
-	    Delay_Ms(2000);
+
+	    DMA_Cmd(DMA1_Channel6, DISABLE);
+	    DMA_SetCurrDataCounter(DMA1_Channel6, UART_BUFFER_SIZE);
+	    DMA_Cmd(DMA1_Channel6, ENABLE);
+	    Delay_Ms(25);
 	}
 }
 
@@ -98,6 +123,8 @@ void USBHS_IRQHandler()
         else
         {
             printf("Enum error\n");
+            connectedType = DISCONNECTED;
+            USB_FreeDevStruct(lastConnectedDevice_ptr);
         }
     }
     else

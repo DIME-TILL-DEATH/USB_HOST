@@ -298,18 +298,15 @@ uint8_t USB_CtrlGetStringDescr(USBDEV_INFO* usbDevice_ptr,
  */
 uint8_t USB_HubGetPortStatus(USBDEV_INFO* usbDevice_ptr, uint8_t fubPortIndex)
 {
-//    USB_SETUP_REQ request;
-//
-//    request.bRequestType = HUB_GET_PORT_STATUS;
-//    request.bRequest = HUB_GET_STATUS;
-//    request.wValue = 0x0000;
-//    request.wIndex = 0x0000|fubPortIndex;
-//    request.wLength = 0x0004;
-//
-//    uint8_t retVal = USB_HostCtrlTransfer(usbDevice_ptr, &request);
-//    if (retVal != ERR_SUCCESS) return retVal ;
+    USB_SETUP_REQ request;
 
-    return ERR_SUCCESS;
+    request.bRequestType = HUB_GET_PORT_STATUS;
+    request.bRequest = HUB_GET_STATUS;
+    request.wValue = 0x0000;
+    request.wIndex = 0x0000|fubPortIndex;
+    request.wLength = 0x0004;
+
+    return USB_HostCtrlTransfer(usbDevice_ptr, &request, NULL);
 }
 
 /*********************************************************************
@@ -324,15 +321,15 @@ uint8_t USB_HubGetPortStatus(USBDEV_INFO* usbDevice_ptr, uint8_t fubPortIndex)
  */
 uint8_t USB_HubSetPortFeature(USBDEV_INFO* usbDevice_ptr, uint8_t hubPortIndex, uint8_t featureSelt)
 {
-//    USB_SETUP_REQ request;
-//
-//    request.bRequestType = HUB_SET_PORT_FEATURE;
-//    request.bRequest = HUB_SET_FEATURE;
-//    request.wValue = 0x0000|featureSelt;
-//    request.wIndex = 0x0000|hubPortIndex;
-//    request.wLength = 0x0000;
+    USB_SETUP_REQ request;
 
-//    return USB_HostCtrlTransfer(usbDevice_ptr, &request);
+    request.bRequestType = HUB_SET_PORT_FEATURE;
+    request.bRequest = HUB_SET_FEATURE;
+    request.wValue = 0x0000|featureSelt;
+    request.wIndex = 0x0000|hubPortIndex;
+    request.wLength = 0x0000;
+
+    return USB_HostCtrlTransfer(usbDevice_ptr, &request, NULL);
 }
 
 /*********************************************************************
@@ -347,15 +344,15 @@ uint8_t USB_HubSetPortFeature(USBDEV_INFO* usbDevice_ptr, uint8_t hubPortIndex, 
  */
 uint8_t USB_HubClearPortFeature(USBDEV_INFO* usbDevice_ptr, uint8_t hubPortIndex, uint8_t featureSel)
 {
-//    USB_SETUP_REQ request;
-//
-//    request.bRequestType = HUB_CLEAR_PORT_FEATURE;
-//    request.bRequest = HUB_CLEAR_FEATURE;
-//    request.wValue = 0x0000|featureSel;
-//    request.wIndex = 0x0000|hubPortIndex;
-//    request.wLength = 0x0000;
+    USB_SETUP_REQ request;
 
-//    return USB_HostCtrlTransfer(usbDevice_ptr, &request);
+    request.bRequestType = HUB_CLEAR_PORT_FEATURE;
+    request.bRequest = HUB_CLEAR_FEATURE;
+    request.wValue = 0x0000|featureSel;
+    request.wIndex = 0x0000|hubPortIndex;
+    request.wLength = 0x0000;
+
+    return USB_HostCtrlTransfer(usbDevice_ptr, &request, NULL);
 }
 
 /*********************************************************************
